@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F5FAF">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Despacho">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Control de despacho</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#E4E7EB; --panel:#FFFFFF; --panel-2:#F2F4F6; --ink:#1C2530; --ink-2:#56616D; --line:#CDD3DA;
+  --signal:#1F5FAF; --signal-ink:#FFFFFF; --ok:#1E9E4A; --warn:#C98A0C; --bad:#C8352A; --led-off:#D5DAE0;
+  --ok-bg:#E3F4E9; --warn-bg:#FBF1DC; --bad-bg:#FBE5E3;
+  --f-body:"Barlow", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --f-num:"Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12171D; --panel:#1C232B; --panel-2:#232C35; --ink:#E6EBF0; --ink-2:#98A3AF; --line:#313B46;
+    --signal:#4A8BE0; --signal-ink:#0C1520; --ok:#34C06A; --warn:#E6A92A; --bad:#EF5B4E; --led-off:#2E3843;
+    --ok-bg:#15301F; --warn-bg:#352A12; --bad-bg:#3A1A17; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12171D; --panel:#1C232B; --panel-2:#232C35; --ink:#E6EBF0; --ink-2:#98A3AF; --line:#313B46;
+  --signal:#4A8BE0; --signal-ink:#0C1520; --ok:#34C06A; --warn:#E6A92A; --bad:#EF5B4E; --led-off:#2E3843;
+  --ok-bg:#15301F; --warn-bg:#352A12; --bad-bg:#3A1A17; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--signal);outline-offset:2px}
+.wrap{max-width:640px;margin:0 auto;padding:0 14px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:10px;height:54px}
+.brand{font-family:var(--f-num);font-weight:700;font-size:22px;letter-spacing:.2px;margin-right:auto}
+.tabs{display:flex;gap:4px}
+.tab{border:0;background:transparent;padding:8px 10px;border-radius:8px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.tab[aria-current="page"]{background:var(--panel);color:var(--ink)}
+main{padding:16px 0 200px}
+h1{font-family:var(--f-num);font-weight:700;font-size:34px;line-height:1.05;margin:4px 0 6px}
+h2{font-family:var(--f-num);font-weight:600;font-size:22px;margin:22px 0 8px}
+p{margin:0 0 10px}
+.muted{color:var(--ink-2)}
+.small{font-size:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stack>*+*{margin-top:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:var(--panel);font-weight:600;cursor:pointer;text-align:center}
+.btn.primary{background:var(--signal);border-color:var(--signal);color:var(--signal-ink)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.sm{min-height:40px;width:auto;padding:6px 12px;font-size:15px}
+.row{display:flex;gap:8px}
+.row>.btn{flex:1}
+.source{display:grid;grid-template-columns:1fr;gap:10px}
+.source .btn{justify-content:flex-start;text-align:left;min-height:64px}
+.source .btn span.t{display:block;font-weight:600}
+.source .btn span.d{display:block;font-weight:400;font-size:14px;color:var(--ink-2)}
+.source .btn.primary span.d{color:inherit;opacity:.85}
+.ico{flex:none;width:28px;height:28px}
+label.f{display:block;font-size:14px;font-weight:600;color:var(--ink-2);margin-bottom:4px}
+input.in{width:100%;min-height:46px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;gap:10px;align-items:center;min-height:44px;cursor:pointer}
+.check input{width:22px;height:22px;accent-color:var(--signal)}
+.edit-items{width:100%;border-collapse:collapse}
+.edit-items td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:middle}
+.edit-items input{width:100%;min-height:40px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel-2)}
+.edit-items .q{width:64px}
+.edit-items .x{width:40px}
+.iconbtn{width:40px;height:40px;border:0;border-radius:8px;background:transparent;color:var(--ink-2);cursor:pointer;font-size:20px}
+
+.hdr-fact{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.count{font-family:var(--f-num);font-weight:700;font-size:34px;line-height:1;text-align:right;white-space:nowrap}
+.count small{display:block;font-family:var(--f-body);font-size:13px;font-weight:500;color:var(--ink-2)}
+.items{list-style:none;margin:14px 0 0;padding:0}
+.item{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.item.done{border-color:var(--ok)}
+.item.flash{animation:flash .6s ease-out}
+@keyframes flash{from{background:var(--ok-bg)}to{background:var(--panel)}}
+@media (prefers-reduced-motion:reduce){.item.flash{animation:none}}
+.item-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.code{font-family:var(--f-num);font-weight:700;font-size:21px;letter-spacing:.2px;word-break:break-all}
+.qty{font-family:var(--f-num);font-weight:600;font-size:21px;white-space:nowrap}
+.item.done .qty{color:var(--ok)}
+.desc{font-size:14px;color:var(--ink-2);margin:1px 0 8px}
+.meter{display:flex;gap:3px;height:12px}
+.meter i{flex:1;border-radius:2px;background:var(--led-off)}
+.meter i.on{background:var(--ok)}
+.serials{margin:8px 0 0;font-size:13px;color:var(--ink-2);word-break:break-all}
+.serials b{color:var(--ink);font-weight:600}
+
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -6px 20px rgba(0,0,0,.08)}
+.dock .wrap{padding-top:10px;padding-bottom:10px}
+.status{border-radius:10px;padding:10px 12px;margin-bottom:10px;font-weight:600;background:var(--panel-2)}
+.status.ok{background:var(--ok-bg);color:var(--ok)}
+.status.warn{background:var(--warn-bg);color:var(--warn)}
+.status.bad{background:var(--bad-bg);color:var(--bad)}
+.status .sub{display:block;font-weight:500;color:var(--ink);font-size:14px;margin-top:2px}
+.status .acts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.scanrow{display:flex;gap:8px}
+.scanrow input{flex:1;min-width:0}
+.scanrow .btn{width:auto;min-height:46px;padding:6px 12px}
+.cam{position:fixed;inset:0;z-index:40;background:#000;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.cam[hidden]{display:none}
+.cam #reader{flex:1;width:100%;overflow:hidden}
+.cam #reader video{object-fit:cover}
+.cam .cam-bar{padding:12px 14px;display:flex;gap:8px;align-items:center;color:#fff}
+.cam .cam-msg{flex:1;font-weight:600}
+.cam-msg.ok{color:#5BE08C}.cam-msg.bad{color:#FF8A80}.cam-msg.warn{color:#FFD166}
+#reader-file{position:absolute;left:-9999px;width:300px;height:300px}
+
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+.modal[hidden]{display:none}
+.sheet{background:var(--panel);width:100%;max-width:640px;max-height:80vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.pick{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--panel-2);border-radius:10px;padding:10px 12px;margin-top:8px;cursor:pointer}
+
+.hist{list-style:none;padding:0;margin:10px 0 0}
+.hist li button{display:flex;width:100%;gap:12px;align-items:center;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.hist .n{font-family:var(--f-num);font-weight:700;font-size:20px}
+.hist .grow{flex:1;min-width:0}
+.hist .c{font-size:14px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{font-size:13px;font-weight:600;padding:3px 8px;border-radius:99px;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.note{border-left:4px solid var(--warn);background:var(--warn-bg);padding:10px 12px;border-radius:6px}
+.note.bad{border-color:var(--bad);background:var(--bad-bg)}
+.note.ok{border-color:var(--ok);background:var(--ok-bg)}
+.spin{display:inline-block;width:18px;height:18px;border:3px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp 1s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.big-ok{text-align:center;padding:28px 10px}
+.big-ok svg{width:72px;height:72px;color:var(--ok)}
+header.top .wrap{flex-wrap:wrap;height:auto;padding-top:8px;padding-bottom:6px;gap:6px}
+.brand{width:100%}
+.tabs{width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tab{padding:8px 4px;font-size:15px}
+main{padding:16px 0 240px}
+.cambig{width:100%;min-height:58px;font-size:18px;margin-bottom:8px}
+.cambig .ico{width:30px;height:30px}
+select.in{appearance:auto}
+.item .meta{font-size:13px;color:var(--ink-2);margin-top:6px}
+.chip.dev{background:var(--bad-bg);color:var(--bad)}
+.devrow{border-left:4px solid var(--bad)}
+.item.dev-on{border-color:var(--signal)}
+.item.dev-on .qty{color:var(--signal)}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand">Control de despacho</div>
+  <nav class="tabs">
+    <button class="tab" data-go="inicio">Despachar</button>
+    <button class="tab" data-go="devs">Devoluciones</button>
+    <button class="tab" data-go="historial">Historial</button>
+    <button class="tab" data-go="ajustes">Ajustes</button>
+  </nav>
+</div></header>
+
+<main><div class="wrap" id="app"></div></main>
+
+<div class="dock" id="dock" hidden><div class="wrap">
+  <div class="status" id="status">Escanea el primer producto.</div>
+  <button class="btn primary cambig" id="camBtn">
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V4h3M21 7V4h-3M3 17v3h3M21 17v3h-3M7 8v8M10 8v8M13 8v8M17 8v8"/></svg>
+    Escanear con cámara
+  </button>
+  <div class="scanrow">
+    <input class="in" id="scanIn" placeholder="Escribe el código o serial" autocomplete="off" autocapitalize="characters" enterkeyhint="done" aria-label="Código o serial">
+    <button class="btn" id="scanGo">Agregar</button>
+    <label class="btn" aria-label="Leer código desde una foto" title="Leer código desde una foto">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      <input type="file" accept="image/*" capture="environment" id="photoCode" hidden>
+    </label>
+  </div>
+</div></div>
+
+<div class="cam" id="cam" hidden>
+  <div id="reader"></div>
+  <div class="cam-bar"><div class="cam-msg" id="camMsg">Apunta al código de barras o QR</div><button class="btn sm" id="camClose">Listo</button></div>
+</div>
+<div id="reader-file"></div>
+<div class="modal" id="modal" hidden><div class="sheet" id="sheet"></div></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= utilidades ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm = s => String(s || "").trim().toUpperCase().replace(/\s+/g, " ");
+const clone = o => JSON.parse(JSON.stringify(o));
+const now = () => new Date().toISOString();
+const fmt = iso => { if (!iso) return ""; try { return new Date(iso).toLocaleString("es-VE", {day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); } catch(e){ return iso; } };
+const num = s => parseFloat(String(s).replace(/\./g, "").replace(",", "."));
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ alert("No se pudo guardar en este teléfono: el almacenamiento está lleno o bloqueado. Exporta un respaldo y borra registros viejos."); return false; } };
+const totalUnits = d => d.items.reduce((a, i) => a + i.cantidad, 0);
+const doneUnits = d => d.items.reduce((a, i) => a + i.hechos, 0);
+const canon = s => norm(s).replace(/\s/g, "").replace(/[OQ]/g, "0").replace(/[I|]/g, "1");
+function lev(a, b){
+  if (a === b) return 0; if (!a.length) return b.length; if (!b.length) return a.length;
+  let prev = Array.from({length: b.length + 1}, (_, j) => j);
+  for (let i = 1; i <= a.length; i++){
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+function loadScript(src){
+  return new Promise((res, rej) => {
+    if (document.querySelector(`script[src="${src}"]`)) return res();
+    const el = document.createElement("script"); el.src = src; el.onload = res; el.onerror = () => rej(new Error("No se pudo descargar un componente. Revisa la conexión a internet."));
+    document.head.appendChild(el);
+  });
+}
+const MOTIVOS = ["Garantía o falla", "Cambio por otro producto", "Error de despacho", "El cliente desistió", "Otro"];
+
+/* ================= estado ================= */
+const S = {
+  view: "inicio", mode: null,
+  draft: null, cur: null, dev: null, esperaSerial: null,
+  lista: [], devs: [], aliases: {}, catalogo: {},
+  detalle: null, cerrado: null, devCerrada: null, hq: "", dq: "", msg: null, pendienteAlias: null, ultimo: null,
+  prefs: Object.assign({despachador: "", pedirSerial: true, sonido: true}, lsGet("prefs", {}))
+};
+const savePrefs = () => lsSet("prefs", S.prefs);
+
+/* ================= almacenamiento local ================= */
+const Store = {
+  load(){
+    const all = lsGet("despachos", {});
+    S.lista = Object.values(all).sort((a, b) => (b.actualizado || "").localeCompare(a.actualizado || ""));
+    S.devs = lsGet("devoluciones", []).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+    S.aliases = lsGet("aliases", {});
+    S.catalogo = lsGet("catalogo", {});
+  },
+  saveCatalogo(){ lsSet("catalogo", S.catalogo); },
+  saveDesp(d){
+    d.actualizado = now();
+    d.seriales = [].concat(...d.items.map(i => i.seriales || [])).filter(Boolean);
+    const all = lsGet("despachos", {});
+    all[d.numero] = clone(d);
+    lsSet("despachos", all);
+    this.load();
+  },
+  removeDesp(numero){ const all = lsGet("despachos", {}); delete all[numero]; lsSet("despachos", all); this.load(); },
+  addDev(dv){ const l = lsGet("devoluciones", []); l.push(clone(dv)); lsSet("devoluciones", l); this.load(); },
+  removeDev(id){ lsSet("devoluciones", lsGet("devoluciones", []).filter(d => d.id !== id)); this.load(); },
+  saveAliases(){ lsSet("aliases", S.aliases); }
+};
+const getDesp = n => S.lista.find(d => d.numero === n) || null;
+const devsDe = n => S.devs.filter(d => d.numeroFactura === n);
+
+/* Lo ya devuelto de una factura: por código, unidades y seriales */
+function devueltoDe(numero){
+  const out = {};
+  devsDe(numero).forEach(dv => dv.items.forEach(it => {
+    const k = norm(it.codigo);
+    out[k] = out[k] || {cant: 0, seriales: []};
+    out[k].cant += it.cantidad;
+    (it.seriales || []).forEach(s => s && out[k].seriales.push(s));
+  }));
+  return out;
+}
+/* ¿Este serial está hoy fuera del depósito con otra factura? (salió y no se devolvió) */
+function serialFuera(serial, excluir){
+  for (const d of S.lista){
+    if (d.numero === excluir || !(d.seriales || []).includes(serial)) continue;
+    const dev = devueltoDe(d.numero);
+    const devuelto = Object.values(dev).some(x => x.seriales.includes(serial));
+    if (!devuelto) return d.numero;
+  }
+  return null;
+}
+
+/* ================= sonido y vibración ================= */
+let actx = null;
+function beep(kind){
+  if (navigator.vibrate) navigator.vibrate(kind === "ok" ? 60 : kind === "warn" ? 40 : [120, 60, 120]);
+  if (!S.prefs.sonido) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const tones = kind === "ok" ? [[1046, 0, .09]] : kind === "warn" ? [[660, 0, .12]] : [[220, 0, .16], [200, .2, .2]];
+    tones.forEach(([f, t, d]) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = kind === "bad" ? "square" : "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(.18, actx.currentTime + t); g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + t + d);
+      o.connect(g); g.connect(actx.destination); o.start(actx.currentTime + t); o.stop(actx.currentTime + t + d + .02);
+    });
+  } catch(e){}
+}
+
+/* ================= lectura del PDF de Saint ================= */
+const EJEMPLO = {
+  numero: "PRUEBA-10095", cliente: "Cliente de prueba", rif: "", vendedor: "VICTOR GONZALEZ", fecha: "18 de septiembre del 2026",
+  items: [
+    {codigo:"EVO6-400.4", descripcion:"AMPLIFICADOR 4 CANALES 400RMS 4 OHM", cantidad:10},
+    {codigo:"EVO6-800.4", descripcion:"AMPLIFICADOR 4 CANALES 800 RMS 4 OHM", cantidad:10},
+    {codigo:"EVO6-3000.1.1", descripcion:"AMPLIFICADOR 1 CANAL 3000RMS 1 OHM", cantidad:3},
+    {codigo:"EVO6-3000.1.2", descripcion:"AMPLIFICADOR 1 CANAL 3000RMS 2 OHM", cantidad:3},
+    {codigo:"EVO6-1200.1.1", descripcion:"AMPLIFICADOR 1 CANAL 1200RMS 1 OHM", cantidad:4},
+    {codigo:"EVO5-1200.4", descripcion:"AMPLIFICADOR 4 CANALES 1200RMS 2 OHM", cantidad:2}
+  ]
+};
+
+async function pdfLineas(file){
+  if (!window.pdfjsLib) throw new Error("El lector de PDF no cargó. Revisa la conexión a internet y recarga la página.");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
+  const out = [];
+  for (let p = 1; p <= pdf.numPages; p++){
+    const tc = await (await pdf.getPage(p)).getTextContent();
+    const rows = [];
+    tc.items.forEach(it => {
+      if (!it.str || !it.str.trim()) return;
+      const y = it.transform[5], x = it.transform[4];
+      let r = rows.find(r => Math.abs(r.y - y) < 2.5);
+      if (!r){ r = {y, parts: []}; rows.push(r); }
+      r.parts.push({x, s: it.str});
+    });
+    rows.sort((a, b) => b.y - a.y).forEach(r => out.push(r.parts.sort((a, b) => a.x - b.x).map(p => p.s).join(" ").replace(/\s+/g, " ").trim()));
+  }
+  return out;
+}
+
+function parseFactura(lines, ocr){
+  const text = lines.join("\n");
+  const pick = re => { const m = text.match(re); return m ? m[1].trim() : ""; };
+  const f = {
+    numero: pick(/Factura\s*N\S*\s*([A-Z0-9\-]+)/i),
+    cliente: pick(/Cliente\s+([^\n]+)/i),
+    rif: pick(/R\.?\s*I\.?\s*F\.?\s*:?\s*([A-Z0-9\-]+)/i),
+    vendedor: pick(/Vendedor\s*([^\n]+)/i),
+    fecha: pick(/Emisi[oó]n\s+([^\n]+)/i),
+    items: []
+  };
+  const re = /^([A-Z0-9][A-Z0-9.\-\/]{1,})\s+(.+?)\s+(\d+(?:,\d+)?)\s+(\d{1,3}(?:\.\d{3})*,\d{2})\s+(\d{1,3}(?:\.\d{3})*,\d{2})$/i;
+  const cuadra = (q, pr, tot) => Math.abs(q * pr - tot) <= Math.max(0.05, tot * 0.01);
+  lines.forEach(raw => {
+    // limpieza de ruido típico del reconocimiento de texto
+    const l = raw.replace(/^[^A-Za-z0-9]+/, "").replace(/(\d)\s*,\s*(\d{2})\b/g, "$1,$2").replace(/(\d)\s*\.\s*(\d{3})\b/g, "$1.$2").replace(/\s+/g, " ").trim();
+    const m = l.match(re); if (!m) return;
+    let q = num(m[3]); const pr = num(m[4]), tot = num(m[5]);
+    let nota = "";
+    if (!cuadra(q, pr, tot)){
+      if (!ocr) return;
+      const deduc = pr > 0 ? tot / pr : 0;
+      if (deduc >= 1 && Math.abs(deduc - Math.round(deduc)) < 0.01){ nota = `Cantidad corregida con el total: se leyó ${m[3]}.`; q = Math.round(deduc); }
+      else nota = "Los números de este renglón no cuadran: verifica la cantidad.";
+    }
+    if (!(q > 0)) return;
+    f.items.push({codigo: norm(m[1]), descripcion: m[2].trim(), cantidad: Math.round(q), nota});
+  });
+  return f;
+}
+
+async function cargarPDF(file){
+  S.msg = {kind: "busy", text: "Leyendo el PDF…"}; render();
+  try {
+    const f = parseFactura(await pdfLineas(file));
+    if (!f.items.length) throw new Error("No se encontraron productos en este PDF. Revisa que sea una factura de Saint o cárgala a mano.");
+    abrirRevision(f, "pdf");
+  } catch(e){ S.msg = {kind: "bad", text: e.message || "No se pudo leer el PDF."}; render(); }
+}
+
+/* ---- ajuste de códigos leídos contra el catálogo ---- */
+function ajustarConCatalogo(items){
+  const codes = Object.keys(S.catalogo);
+  if (!codes.length) return items;
+  const tokens = t => new Set(norm(t).split(/[^A-Z0-9]+/).filter(x => x.length > 1));
+  const simDesc = (a, b) => { const A = tokens(a), B = tokens(b); if (!A.size || !B.size) return 0; let n = 0; A.forEach(x => { if (B.has(x)) n++; }); return n / Math.max(A.size, B.size); };
+  const exactos = new Set(items.map(it => codes.find(k => canon(k) === canon(it.codigo))).filter(Boolean));
+  return items.map(it => {
+    const c = canon(it.codigo);
+    const exacto = codes.find(k => canon(k) === c);
+    if (exacto) return Object.assign({}, it, {codigo: exacto, descripcion: S.catalogo[exacto] || it.descripcion});
+    const tope = Math.max(1, Math.floor(c.length * 0.2));
+    const cands = codes.map(k => ({k, d: lev(c, canon(k))})).filter(x => x.d <= tope && !exactos.has(x.k))
+      .map(x => Object.assign(x, {score: x.d - simDesc(it.descripcion, S.catalogo[x.k]) * 0.9})).sort((a, b) => a.score - b.score);
+    if (!cands.length) return Object.assign({}, it, {nota: `No está en el catálogo: verifica el código. ${it.nota || ""}`.trim()});
+    if (cands.length > 1 && cands[1].score - cands[0].score < 0.15)
+      return Object.assign({}, it, {nota: `Código dudoso (se leyó ${it.codigo}): puede ser ${cands.slice(0, 3).map(x => x.k).join(" o ")}. ${it.nota || ""}`.trim()});
+    const best = cands[0].k;
+    return Object.assign({}, it, {codigo: best, descripcion: S.catalogo[best] || it.descripcion, nota: `Código corregido con el catálogo: se leyó ${it.codigo}. ${it.nota || ""}`.trim()});
+  });
+}
+
+/* ---- reconocimiento de la foto de la factura ---- */
+let ocrWorker = null, ocrProgreso = null;
+async function prepararImagen(file){
+  let img;
+  try { img = await createImageBitmap(file, {imageOrientation: "from-image"}); }
+  catch(e){ img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error("No se pudo abrir la foto.")); im.src = URL.createObjectURL(file); }); }
+  const scale = Math.min(2.5, 3000 / Math.max(img.width, img.height));
+  const cv = document.createElement("canvas");
+  cv.width = Math.round(img.width * scale); cv.height = Math.round(img.height * scale);
+  const cx = cv.getContext("2d", {willReadFrequently: true});
+  cx.drawImage(img, 0, 0, cv.width, cv.height);
+  const id = cx.getImageData(0, 0, cv.width, cv.height), px = id.data;
+  const hist = new Uint32Array(256);
+  for (let i = 0; i < px.length; i += 4){ const g = (px[i] * 299 + px[i + 1] * 587 + px[i + 2] * 114) / 1000 | 0; px[i] = g; hist[g]++; }
+  const total = px.length / 4; let acc = 0, lo = 0, hi = 255;
+  for (let v = 0; v < 256; v++){ acc += hist[v]; if (acc > total * 0.01){ lo = v; break; } }
+  acc = 0; for (let v = 255; v >= 0; v--){ acc += hist[v]; if (acc > total * 0.01){ hi = v; break; } }
+  const rango = Math.max(1, hi - lo);
+  for (let i = 0; i < px.length; i += 4){ const g = Math.max(0, Math.min(255, (px[i] - lo) * 255 / rango)); px[i] = px[i + 1] = px[i + 2] = g; }
+  cx.putImageData(id, 0, 0);
+  return cv;
+}
+async function cargarFoto(file){
+  const foto = URL.createObjectURL(file);
+  const paso = t => { S.msg = {kind: "busy", text: t}; render(); };
+  try {
+    paso("Preparando la foto…");
+    const cv = await prepararImagen(file);
+    if (!ocrWorker){
+      paso("Descargando el lector de texto (solo la primera vez, puede tardar un minuto)…");
+      await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");
+      ocrWorker = await Tesseract.createWorker("spa", 1, {logger: m => { if (ocrProgreso) ocrProgreso(m); }});
+      await ocrWorker.setParameters({tessedit_pageseg_mode: "6", preserve_interword_spaces: "1"});
+    }
+    paso("Leyendo la factura… 0%");
+    ocrProgreso = m => { if (m.status === "recognizing text"){ const el = document.querySelector(".note.ok"); if (el) el.innerHTML = `<span class="spin"></span> Leyendo la factura… ${Math.round(m.progress * 100)}%`; } };
+    const {data} = await ocrWorker.recognize(cv);
+    ocrProgreso = null;
+    const f = parseFactura(data.text.split("\n"), true);
+    if (!f.items.length) throw new Error("No se reconocieron productos. Toma la foto de frente, con buena luz, sin sombras y con la tabla de productos completa y enfocada.");
+    f.items = ajustarConCatalogo(f.items);
+    f.foto = foto;
+    abrirRevision(f, "foto");
+  } catch(e){
+    ocrProgreso = null;
+    S.msg = {kind: "bad", text: e.message || "No se pudo leer la foto."}; render();
+  }
+}
+
+function abrirRevision(f, origen){
+  S.draft = Object.assign({rif: "", vendedor: "", fecha: "", cliente: ""}, clone(f), {origen});
+  S.draft.pedirSerial = S.prefs.pedirSerial;
+  S.draft.despachador = S.prefs.despachador;
+  S.msg = null; go("revisar");
+}
+
+/* ================= navegación ================= */
+const SCAN_VIEWS = ["despacho", "devolucion"];
+function go(v){
+  S.view = v;
+  S.mode = v === "despacho" ? "despacho" : v === "devolucion" ? "devolucion" : null;
+  if (!S.mode) closeCam();
+  render(); window.scrollTo(0, 0);
+}
+$$("[data-go]").forEach(b => b.addEventListener("click", () => {
+  const v = b.dataset.go;
+  if (v === "inicio" && S.cur) return go("despacho");
+  if (v === "devs" && S.dev) return go("devolucion");
+  S.msg = null; go(v);
+}));
+
+function render(){
+  const grupo = {inicio: ["inicio","revisar","despacho","listo"], devs: ["devs","devNueva","devolucion","devListo"], historial: ["historial","detalle"], ajustes: ["ajustes"]};
+  $$(".tab").forEach(t => { if ((grupo[t.dataset.go] || []).includes(S.view)) t.setAttribute("aria-current", "page"); else t.removeAttribute("aria-current"); });
+  $("#dock").hidden = !SCAN_VIEWS.includes(S.view);
+  const V = {inicio: vInicio, revisar: vRevisar, despacho: vDespacho, listo: vListo, historial: vHistorial, detalle: vDetalle, ajustes: vAjustes, devs: vDevs, devNueva: vDevNueva, devolucion: vDevolucion, devListo: vDevListo};
+  $("#app").innerHTML = (V[S.view] || vInicio)();
+  if (bind[S.view]) bind[S.view]();
+}
+
+const msgBox = () => !S.msg ? "" : S.msg.kind === "busy"
+  ? `<div class="note ok"><span class="spin"></span> ${esc(S.msg.text)}</div>`
+  : `<div class="note ${S.msg.kind === "bad" ? "bad" : S.msg.kind === "ok" ? "ok" : ""}">${esc(S.msg.text)}</div>`;
+
+const ICO = {
+  cam: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  pdf: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h6"/></svg>',
+  pen: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+  play: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4z"/></svg>',
+  back: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14l-5-5 5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg>',
+  ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M7 12.5l3.2 3.2L17 9"/></svg>'
+};
+
+/* ================= vistas: despacho ================= */
+function vInicio(){
+  const enCurso = S.lista.filter(d => d.estado === "en_proceso").slice(0, 5);
+  return `
+  <h1>Nueva salida</h1>
+  <p class="muted">Carga la factura y verifica cada producto antes de entregarlo.</p>
+  ${msgBox()}
+  ${!Object.keys(S.catalogo).length ? `<p class="muted small" style="margin-top:8px">Consejo: importa tu catálogo de productos en Ajustes para que los códigos leídos con la cámara se corrijan solos.</p>` : ""}
+  <div class="source" style="margin-top:12px">
+    <label class="btn primary">${ICO.cam}
+      <span><span class="t">Escanear factura con la cámara</span><span class="d">Toma una foto de la factura impresa y se leen los productos.</span></span>
+      <input type="file" accept="image/*" capture="environment" id="inFoto" hidden>
+    </label>
+    <label class="btn">${ICO.pdf}
+      <span><span class="t">Abrir PDF de la factura</span><span class="d">Si tienes el PDF que genera Saint.</span></span>
+      <input type="file" accept="application/pdf,.pdf" id="inPdf" hidden>
+    </label>
+    <button class="btn" id="bManual">${ICO.pen}<span><span class="t">Cargar a mano</span><span class="d">Escribe el número y los productos.</span></span></button>
+    <button class="btn" id="bEjemplo">${ICO.play}<span><span class="t">Probar con la factura de ejemplo</span><span class="d">Los 6 amplificadores EVO de la factura 10095.</span></span></button>
+  </div>
+  ${bloqueWhatsApp()}
+  ${enCurso.length ? `<h2>Despachos sin terminar</h2><ul class="hist">${enCurso.map(histRow).join("")}</ul>` : ""}`;
+}
+
+const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const instalada = () => window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+let installEvt = null;
+function bloqueWhatsApp(){
+  if (esIOS) return `<h2>Facturas por WhatsApp</h2><p class="muted small">En iPhone: abre el PDF en WhatsApp, toca Compartir y elige "Guardar en Archivos". Luego usa "Abrir PDF de la factura" y búscalo en Archivos.</p>`;
+  if (instalada()) return `<h2>Facturas por WhatsApp</h2><p class="muted small">En el chat de WhatsApp, mantén presionado el PDF de la factura, toca Compartir y elige "Despacho". La factura se abre aquí lista para revisar.</p>`;
+  return `<h2>Facturas por WhatsApp</h2>
+    <p class="muted small">Instala la app en el teléfono y podrás mandarle el PDF directo desde WhatsApp con el botón Compartir.</p>
+    ${installEvt ? `<button class="btn" id="bInstalar">Instalar la app en este teléfono</button>` : `<p class="muted small">Para instalarla: abre el menú de Chrome (los tres puntos) y toca "Instalar aplicación" o "Agregar a la pantalla principal".</p>`}`;
+}
+
+function vRevisar(){
+  const d = S.draft;
+  return `
+  <h1>Revisar factura</h1>
+  <p class="muted">${d.origen === "pdf" ? "Leído del PDF. " : d.origen === "foto" ? "Leído de la foto: compáralo con la factura en papel. " : ""}Corrige lo que haga falta antes de empezar.</p>
+  ${msgBox()}
+  ${d.foto ? `<details class="panel" open style="margin-bottom:12px"><summary style="font-weight:600;cursor:pointer">Foto de la factura</summary><img src="${d.foto}" alt="Foto de la factura" style="display:block;width:100%;margin-top:10px;border-radius:8px"></details>` : ""}
+  ${d.items.some(i => i.nota) ? `<div class="note" style="margin-bottom:12px">Hay ${d.items.filter(i => i.nota).length} renglones marcados para revisar.</div>` : ""}
+  <div class="panel stack">
+    <div class="grid2">
+      <div><label class="f" for="rNum">Número de factura</label><input class="in" id="rNum" value="${esc(d.numero)}"></div>
+      <div><label class="f" for="rDes">Despachador</label><input class="in" id="rDes" value="${esc(d.despachador)}" placeholder="Tu nombre"></div>
+    </div>
+    <div><label class="f" for="rCli">Cliente</label><input class="in" id="rCli" value="${esc(d.cliente)}"></div>
+    <label class="check"><input type="checkbox" id="rSer" ${d.pedirSerial ? "checked" : ""}> Pedir el serial de cada unidad</label>
+  </div>
+  <h2>Productos (${d.items.length})</h2>
+  <div class="panel">
+    <table class="edit-items"><tbody>
+      ${d.items.map((it, i) => `<tr>
+        <td><input data-i="${i}" data-k="codigo" value="${esc(it.codigo)}" aria-label="Código" placeholder="Código"><div class="small muted" style="margin-top:2px">${esc(it.descripcion)}</div>${it.nota ? `<div class="small" style="margin-top:2px;color:var(--warn);font-weight:600">${esc(it.nota)}</div>` : ""}</td>
+        <td class="q"><input data-i="${i}" data-k="cantidad" value="${it.cantidad}" inputmode="numeric" aria-label="Cantidad"></td>
+        <td class="x"><button class="iconbtn" data-del="${i}" aria-label="Quitar renglón">×</button></td>
+      </tr>`).join("")}
+    </tbody></table>
+    <button class="btn sm" id="rAdd" style="margin-top:8px">Agregar renglón</button>
+  </div>
+  <div class="stack" style="margin-top:16px">
+    <button class="btn primary" id="rGo">Empezar despacho</button>
+    <button class="btn" id="rCancel">Cancelar</button>
+  </div>`;
+}
+
+function meter(hechos, cantidad){
+  const segs = Math.min(cantidad, 20), on = Math.round(hechos / cantidad * segs);
+  return `<div class="meter" aria-hidden="true">${Array.from({length: segs}, (_, k) => `<i class="${k < on ? "on" : ""}"></i>`).join("")}</div>`;
+}
+const serialList = arr => { const s = (arr || []).filter(Boolean); return s.length ? `<div class="serials">Seriales: ${s.map(x => `<b>${esc(x)}</b>`).join(", ")}</div>` : ""; };
+
+function vDespacho(){
+  const d = S.cur, tot = totalUnits(d), hech = doneUnits(d), completo = hech === tot;
+  return `
+  <div class="hdr-fact">
+    <div><h1>Factura ${esc(d.numero)}</h1><p class="muted" style="margin:0">${esc(d.cliente || "Sin cliente")}</p></div>
+    <div class="count">${hech}/${tot}<small>unidades</small></div>
+  </div>
+  <div class="row" style="margin-top:12px">
+    ${completo ? `<button class="btn ok" id="dClose">Cerrar despacho</button>` : `<button class="btn" id="dUndo" ${d.pila.length ? "" : "disabled"}>Deshacer último</button>`}
+    <button class="btn" id="dPause">Guardar y salir</button>
+  </div>
+  <ul class="items">
+    ${d.items.map((it, i) => `<li class="item ${it.hechos >= it.cantidad ? "done" : ""} ${S.ultimo === i ? "flash" : ""}">
+      <div class="item-top"><span class="code">${esc(it.codigo)}</span><span class="qty">${it.hechos}/${it.cantidad}</span></div>
+      <div class="desc">${esc(it.descripcion)}</div>
+      ${meter(it.hechos, it.cantidad)}${serialList(it.seriales)}
+    </li>`).join("")}
+  </ul>`;
+}
+
+function vListo(){
+  const d = S.cerrado;
+  return `<div class="big-ok">${ICO.ok}
+    <h1>Factura ${esc(d.numero)} despachada</h1>
+    <p class="muted">${totalUnits(d)} unidades verificadas por ${esc(d.despachador || "sin nombre")}, ${esc(fmt(d.fin))}.</p>
+  </div>
+  <button class="btn primary" id="lNew">Despachar otra factura</button>`;
+}
+
+/* ================= vistas: historial ================= */
+function histRow(d){
+  const ok = d.estado === "despachada", nDev = devsDe(d.numero).length;
+  return `<li><button data-open="${esc(d.numero)}">
+    <div class="grow"><div class="n">${esc(d.numero)}</div><div class="c">${esc(d.cliente || "Sin cliente")}</div></div>
+    <div style="text-align:right">
+      <span class="chip ${ok ? "ok" : "warn"}">${ok ? "Despachada" : `En curso ${doneUnits(d)}/${totalUnits(d)}`}</span>
+      ${nDev ? `<div style="margin-top:4px"><span class="chip dev">${nDev === 1 ? "1 devolución" : nDev + " devoluciones"}</span></div>` : ""}
+      <div class="small muted" style="margin-top:4px">${esc(fmt(d.fin || d.actualizado))}</div>
+    </div>
+  </button></li>`;
+}
+
+function vHistorial(){
+  const q = norm(S.hq);
+  const list = !q ? S.lista : S.lista.filter(d => norm(d.numero).includes(q) || norm(d.cliente).includes(q) || (d.seriales || []).some(s => norm(s).includes(q)) || d.items.some(i => norm(i.codigo).includes(q)));
+  return `
+  <h1>Historial</h1>
+  <p class="muted">Busca por factura, cliente, código o serial, por ejemplo para una garantía.</p>
+  <input class="in" id="hq" placeholder="Buscar…" value="${esc(S.hq)}" autocomplete="off">
+  ${list.length ? `<ul class="hist">${list.map(histRow).join("")}</ul>` : `<p class="muted" style="margin-top:14px">${q ? "Nada coincide con la búsqueda." : "Aún no hay despachos. Empieza uno en Despachar."}</p>`}`;
+}
+
+function vDetalle(){
+  const d = getDesp(S.detalle);
+  if (!d) return `<p class="muted">Este registro ya no existe.</p><button class="btn" data-back>Volver</button>`;
+  const ok = d.estado === "despachada", dv = devsDe(d.numero), devuelto = devueltoDe(d.numero);
+  return `
+  <h1>Factura ${esc(d.numero)}</h1>
+  <p class="muted">${esc(d.cliente || "Sin cliente")}${d.rif ? `, RIF ${esc(d.rif)}` : ""}</p>
+  <div class="note ${ok ? "ok" : ""}">${ok ? `Despachada por ${esc(d.despachador || "sin nombre")} el ${esc(fmt(d.fin))}.` : `En curso: ${doneUnits(d)} de ${totalUnits(d)} unidades verificadas.`}</div>
+  <ul class="items">${d.items.map(it => { const r = devuelto[norm(it.codigo)]; return `<li class="item ${it.hechos >= it.cantidad ? "done" : ""}">
+    <div class="item-top"><span class="code">${esc(it.codigo)}</span><span class="qty">${it.hechos}/${it.cantidad}</span></div>
+    <div class="desc">${esc(it.descripcion)}</div>
+    ${serialList(it.seriales)}
+    ${r ? `<div class="meta" style="color:var(--bad)">Devueltas: ${r.cant}${r.seriales.length ? ` (${r.seriales.map(esc).join(", ")})` : ""}</div>` : ""}
+  </li>`; }).join("")}</ul>
+  ${dv.length ? `<h2>Devoluciones de esta factura</h2><ul class="hist">${dv.map(devRow).join("")}</ul>` : ""}
+  <div class="stack" style="margin-top:14px">
+    ${!ok ? `<button class="btn primary" id="dtCont">Continuar despacho</button>` : `<button class="btn" id="dtDev">${ICO.back} Registrar una devolución</button>`}
+    <button class="btn danger" id="dtDel">Borrar este registro</button>
+    <button class="btn" data-back>Volver al historial</button>
+  </div>`;
+}
+
+/* ================= vistas: devoluciones ================= */
+const unidadesDev = dv => dv.items.reduce((a, i) => a + i.cantidad, 0);
+function devRow(dv){
+  return `<li><button data-dev="${esc(dv.id)}" class="devrow">
+    <div class="grow"><div class="n">${dv.numeroFactura ? "Factura " + esc(dv.numeroFactura) : "Sin factura"}</div><div class="c">${esc(dv.motivo)}${dv.cliente ? ", " + esc(dv.cliente) : ""}</div></div>
+    <div style="text-align:right"><span class="chip dev">${unidadesDev(dv)} ${unidadesDev(dv) === 1 ? "unidad" : "unidades"}</span><div class="small muted" style="margin-top:4px">${esc(fmt(dv.fecha))}</div></div>
+  </button></li>`;
+}
+
+function vDevs(){
+  const q = norm(S.dq);
+  const list = !q ? S.devs : S.devs.filter(dv => norm(dv.numeroFactura).includes(q) || norm(dv.cliente).includes(q) || norm(dv.motivo).includes(q) || dv.items.some(i => norm(i.codigo).includes(q) || (i.seriales || []).some(s => norm(s).includes(q))));
+  return `
+  <h1>Devoluciones</h1>
+  <p class="muted">Registra lo que el cliente trae de vuelta y verifica que salió con esa factura.</p>
+  ${msgBox()}
+  <button class="btn primary" id="dvNew" style="margin-top:10px">${ICO.back} Nueva devolución</button>
+  ${S.devs.length ? `<input class="in" id="dq" placeholder="Buscar por factura, cliente, código o serial" value="${esc(S.dq)}" autocomplete="off" style="margin-top:14px">` : ""}
+  ${list.length ? `<ul class="hist">${list.map(devRow).join("")}</ul>` : `<p class="muted" style="margin-top:14px">${q ? "Nada coincide con la búsqueda." : "Aún no hay devoluciones registradas."}</p>`}`;
+}
+
+function vDevNueva(){
+  const recientes = S.lista.filter(d => d.estado === "despachada").slice(0, 8);
+  return `
+  <h1>Nueva devolución</h1>
+  <p class="muted">Indica de qué factura viene la mercancía.</p>
+  ${msgBox()}
+  <div class="panel stack" style="margin-top:10px">
+    <div><label class="f" for="nvNum">Número de factura</label>
+      <div class="scanrow"><input class="in" id="nvNum" placeholder="Ej. 10095" autocomplete="off"><button class="btn primary" id="nvBuscar">Buscar</button></div></div>
+  </div>
+  ${recientes.length ? `<h2>Despachadas recientemente</h2><ul class="hist">${recientes.map(d => `<li><button data-nvpick="${esc(d.numero)}"><div class="grow"><div class="n">${esc(d.numero)}</div><div class="c">${esc(d.cliente || "Sin cliente")}</div></div><div class="small muted">${esc(fmt(d.fin))}</div></button></li>`).join("")}</ul>` : ""}
+  <h2>La factura no está en el sistema</h2>
+  <p class="muted small">Para facturas despachadas antes de usar esta app. Los productos se registran sin verificar contra la salida.</p>
+  <button class="btn" id="nvLibre">Registrar devolución sin factura del sistema</button>
+  <button class="btn" id="nvCancel" style="margin-top:10px">Cancelar</button>`;
+}
+
+function vDevolucion(){
+  const dv = S.dev, tot = dv.items.reduce((a, i) => a + i.ahora, 0);
+  const lineas = dv.vinculada ? dv.items : dv.items.filter(i => i.ahora > 0);
+  return `
+  <div class="hdr-fact">
+    <div><h1>Devolución</h1><p class="muted" style="margin:0">${dv.vinculada ? `Factura ${esc(dv.numeroFactura)}, ${esc(dv.cliente || "sin cliente")}` : (dv.numeroFactura ? `Factura ${esc(dv.numeroFactura)} (no registrada)` : "Sin factura del sistema")}</p></div>
+    <div class="count" style="color:var(--signal)">${tot}<small>por devolver</small></div>
+  </div>
+  <div class="panel stack" style="margin-top:12px">
+    ${!dv.vinculada ? `<div><label class="f" for="dvNum">Número de factura (opcional)</label><input class="in" id="dvNum" value="${esc(dv.numeroFactura)}"></div>` : ""}
+    <div><label class="f" for="dvMot">Motivo</label>
+      <select class="in" id="dvMot"><option value="">Elige el motivo…</option>${MOTIVOS.map(m => `<option ${dv.motivo === m ? "selected" : ""}>${esc(m)}</option>`).join("")}</select></div>
+    <div><label class="f" for="dvNota">Nota</label><input class="in" id="dvNota" value="${esc(dv.nota)}" placeholder="Ej. no enciende, caja golpeada"></div>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn primary" id="dvSave" ${tot ? "" : "disabled"}>Registrar devolución</button>
+    <button class="btn" id="dvUndo" ${dv.pila.length ? "" : "disabled"}>Deshacer último</button>
+  </div>
+  ${lineas.length ? `<ul class="items">${lineas.map(it => {
+    const i = dv.items.indexOf(it);
+    const max = dv.vinculada ? it.despachado - it.previo : null;
+    return `<li class="item ${it.ahora ? "dev-on" : ""} ${S.ultimo === i ? "flash" : ""}">
+      <div class="item-top"><span class="code">${esc(it.codigo)}</span><span class="qty">${it.ahora}${max !== null ? "/" + max : ""}</span></div>
+      <div class="desc">${esc(it.descripcion)}</div>
+      ${dv.vinculada ? `<div class="meta">Salieron ${it.despachado}${it.previo ? `, ya devueltas antes ${it.previo}` : ""}${it.conSerial ? ", se verifica por serial" : ""}</div>` : ""}
+      ${serialList(it.serialesAhora)}
+    </li>`; }).join("")}</ul>` : `<p class="muted" style="margin-top:14px">Escanea cada producto que devuelve el cliente.</p>`}
+  <button class="btn" id="dvCancel" style="margin-top:12px">Cancelar devolución</button>`;
+}
+
+function vDevListo(){
+  const dv = S.devCerrada;
+  return `<div class="big-ok">${ICO.ok}
+    <h1>Devolución registrada</h1>
+    <p class="muted">${unidadesDev(dv)} ${unidadesDev(dv) === 1 ? "unidad" : "unidades"}${dv.numeroFactura ? " de la factura " + esc(dv.numeroFactura) : ""}, motivo: ${esc(dv.motivo)}.</p>
+  </div>
+  <button class="btn primary" id="dlNew">Registrar otra devolución</button>
+  <button class="btn" id="dlList" style="margin-top:10px">Ver devoluciones</button>`;
+}
+
+function verDevolucion(id){
+  const dv = S.devs.find(x => x.id === id); if (!dv) return;
+  $("#sheet").innerHTML = `<h2 style="margin-top:0">Devolución${dv.numeroFactura ? " de la factura " + esc(dv.numeroFactura) : ""}</h2>
+    <p class="muted small">${esc(fmt(dv.fecha))}, recibió ${esc(dv.despachador || "sin nombre")}. Motivo: ${esc(dv.motivo)}${dv.nota ? ". " + esc(dv.nota) : ""}${dv.vinculada ? "" : ". Sin verificar contra la salida."}</p>
+    <ul class="items">${dv.items.map(it => `<li class="item"><div class="item-top"><span class="code">${esc(it.codigo)}</span><span class="qty">${it.cantidad}</span></div><div class="desc">${esc(it.descripcion)}</div>${serialList(it.seriales)}</li>`).join("")}</ul>
+    <button class="btn danger" id="svDel">Borrar esta devolución</button>
+    <button class="btn" id="svClose" style="margin-top:10px">Cerrar</button>`;
+  $("#modal").hidden = false;
+  $("#svClose").onclick = () => { $("#modal").hidden = true; };
+  const del = $("#svDel");
+  del.onclick = () => {
+    if (del.dataset.armed){ Store.removeDev(id); $("#modal").hidden = true; render(); return; }
+    del.dataset.armed = "1"; del.textContent = "Toca de nuevo para borrar";
+  };
+}
+
+/* ================= vistas: ajustes ================= */
+function vAjustes(){
+  const al = Object.entries(S.aliases);
+  return `
+  <h1>Ajustes</h1>
+  ${msgBox()}
+  <div class="panel stack" style="margin-top:12px">
+    <div><label class="f" for="aDes">Nombre del despachador en este teléfono</label><input class="in" id="aDes" value="${esc(S.prefs.despachador)}"></div>
+    <label class="check"><input type="checkbox" id="aSer" ${S.prefs.pedirSerial ? "checked" : ""}> Pedir serial por unidad en cada despacho nuevo</label>
+    <label class="check"><input type="checkbox" id="aSon" ${S.prefs.sonido ? "checked" : ""}> Sonido al escanear</label>
+  </div>
+  <h2>Catálogo de productos (${Object.keys(S.catalogo).length})</h2>
+  <p class="muted small">Con el catálogo, los códigos leídos de la foto se corrigen solos. Exporta desde Saint el listado de inventario a Excel e impórtalo aquí. También se aprende de cada factura que despachas.</p>
+  <div class="stack">
+    <label class="btn">Importar catálogo desde Excel o CSV<input type="file" accept=".xlsx,.xls,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" id="aCat" hidden></label>
+    ${Object.keys(S.catalogo).length ? `<button class="btn danger" id="aCatDel">Vaciar catálogo</button>` : ""}
+  </div>
+  <h2>Respaldo</h2>
+  <p class="muted small">Los datos se guardan solo en este teléfono y en este navegador. Exporta un respaldo con frecuencia.</p>
+  <div class="stack">
+    <button class="btn" id="aCsv">Exportar a Excel (CSV)</button>
+    <button class="btn" id="aJson">Exportar respaldo completo</button>
+    <label class="btn">Importar respaldo<input type="file" accept="application/json,.json" id="aImp" hidden></label>
+  </div>
+  <h2>Códigos asociados (${al.length})</h2>
+  <p class="muted small">Códigos de barras del fabricante vinculados a un código de Saint. Se crean al escanear una caja que la app aún no conoce.</p>
+  ${al.length ? `<div class="panel"><table class="edit-items"><tbody>${al.map(([k, v]) => `<tr><td><b>${esc(k)}</b><div class="small muted">${esc(v)}</div></td><td class="x"><button class="iconbtn" data-unalias="${esc(k)}" aria-label="Quitar asociación">×</button></td></tr>`).join("")}</tbody></table></div>` : `<p class="muted small">Todavía no hay ninguno.</p>`}
+  <h2>Datos de prueba</h2>
+  <button class="btn danger" id="aWipe">Borrar todos los despachos y devoluciones</button>`;
+}
+
+function descargar(nombre, contenido, tipo){
+  const blob = new Blob([contenido], {type: tipo});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+function exportCSV(){
+  const cel = v => { const s = String(v == null ? "" : v); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const rows = [["Tipo","Factura","Cliente","Fecha","Responsable","Codigo","Descripcion","Serial","Motivo","Nota"]];
+  S.lista.forEach(d => d.items.forEach(it => {
+    for (let k = 0; k < it.hechos; k++) rows.push([d.estado === "despachada" ? "Salida" : "Salida en curso", d.numero, d.cliente, fmt(d.fin || d.actualizado), d.despachador, it.codigo, it.descripcion, (it.seriales || [])[k] || "", "", ""]);
+  }));
+  S.devs.forEach(dv => dv.items.forEach(it => {
+    for (let k = 0; k < it.cantidad; k++) rows.push(["Devolucion", dv.numeroFactura, dv.cliente, fmt(dv.fecha), dv.despachador, it.codigo, it.descripcion, (it.seriales || [])[k] || "", dv.motivo, dv.nota]);
+  }));
+  const fecha = new Date().toISOString().slice(0, 10);
+  descargar(`despachos_${fecha}.csv`, "\uFEFF" + rows.map(r => r.map(cel).join(";")).join("\r\n"), "text/csv;charset=utf-8");
+}
+function exportJSON(){
+  const data = {app: "control-despacho", version: 2, exportado: now(), despachos: lsGet("despachos", {}), devoluciones: lsGet("devoluciones", []), aliases: lsGet("aliases", {}), catalogo: lsGet("catalogo", {})};
+  descargar(`respaldo_despacho_${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 1), "application/json");
+}
+async function importJSON(file){
+  try {
+    const data = JSON.parse(await file.text());
+    if (data.app !== "control-despacho") throw new Error("Este archivo no es un respaldo de esta app.");
+    const des = Object.assign(lsGet("despachos", {}), data.despachos || {});
+    const devIds = new Set(lsGet("devoluciones", []).map(d => d.id));
+    const devs = lsGet("devoluciones", []).concat((data.devoluciones || []).filter(d => !devIds.has(d.id)));
+    lsSet("despachos", des); lsSet("devoluciones", devs); lsSet("aliases", Object.assign(lsGet("aliases", {}), data.aliases || {})); lsSet("catalogo", Object.assign(lsGet("catalogo", {}), data.catalogo || {}));
+    Store.load();
+    S.msg = {kind: "ok", text: `Respaldo importado: ${Object.keys(data.despachos || {}).length} despachos y ${(data.devoluciones || []).length} devoluciones.`};
+  } catch(e){ S.msg = {kind: "bad", text: e.message || "No se pudo leer el respaldo."}; }
+  render();
+}
+
+async function importarCatalogo(file){
+  S.msg = {kind: "busy", text: "Leyendo el catálogo…"}; render();
+  try {
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
+    const wb = XLSX.read(await file.arrayBuffer(), {type: "array"});
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1, raw: false, defval: ""});
+    let hdr = -1, ci = 0, di = 1;
+    for (let r = 0; r < Math.min(rows.length, 15); r++){
+      const row = rows[r].map(c => String(c).toLowerCase());
+      const c = row.findIndex(x => /c[oó]d/.test(x)), d = row.findIndex(x => /desc/.test(x));
+      if (c >= 0 && d >= 0){ hdr = r; ci = c; di = d; break; }
+    }
+    let n = 0;
+    rows.slice(hdr + 1).forEach(row => {
+      const cod = norm(row[ci]); if (!cod || cod.length < 2 || /^c[oó]d/i.test(cod)) return;
+      S.catalogo[cod] = String(row[di] || "").trim(); n++;
+    });
+    if (!n) throw new Error("No se encontraron productos. El archivo debe tener una columna de código y otra de descripción.");
+    Store.saveCatalogo();
+    S.msg = {kind: "ok", text: `Catálogo importado: ${n} productos.`};
+  } catch(e){ S.msg = {kind: "bad", text: e.message || "No se pudo leer el archivo."}; }
+  render();
+}
+
+/* ================= eventos por vista ================= */
+function armar(btn, texto, accion){
+  btn.onclick = () => {
+    if (btn.dataset.armed) return accion();
+    const orig = btn.textContent;
+    btn.dataset.armed = "1"; btn.textContent = texto;
+    setTimeout(() => { if (btn.isConnected){ delete btn.dataset.armed; btn.textContent = orig; } }, 3500);
+  };
+}
+function bindHist(){
+  $$("[data-open]").forEach(b => b.onclick = () => {
+    const d = getDesp(b.dataset.open);
+    if (d && d.estado === "en_proceso" && S.view === "inicio") return empezar(clone(d));
+    S.detalle = b.dataset.open; go("detalle");
+  });
+  $$("[data-dev]").forEach(b => b.onclick = () => verDevolucion(b.dataset.dev));
+}
+function refocusSearch(id, pos){ const n = $(id); if (!n) return; n.focus(); try { n.setSelectionRange(pos, pos); } catch(e){} }
+
+const bind = {
+  inicio(){
+    $("#inPdf").addEventListener("change", e => { const f = e.target.files[0]; if (f) cargarPDF(f); });
+    $("#inFoto").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) cargarFoto(f); });
+    const bi = $("#bInstalar"); if (bi) bi.onclick = async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch(e){} installEvt = null; render(); };
+    $("#bManual").onclick = () => abrirRevision({numero: "", cliente: "", items: [{codigo: "", descripcion: "", cantidad: 1}]}, "manual");
+    $("#bEjemplo").onclick = () => abrirRevision(EJEMPLO, "ejemplo");
+    bindHist();
+  },
+  revisar(){
+    const d = S.draft;
+    const sync = () => {
+      d.numero = $("#rNum").value.trim(); d.despachador = $("#rDes").value.trim(); d.cliente = $("#rCli").value.trim(); d.pedirSerial = $("#rSer").checked;
+      $$("[data-k]").forEach(inp => {
+        const it = d.items[+inp.dataset.i];
+        if (inp.dataset.k === "codigo") it.codigo = norm(inp.value); else it.cantidad = Math.max(0, parseInt(inp.value, 10) || 0);
+      });
+    };
+    $$("[data-del]").forEach(b => b.onclick = () => { sync(); d.items.splice(+b.dataset.del, 1); render(); });
+    $("#rAdd").onclick = () => { sync(); d.items.push({codigo: "", descripcion: "", cantidad: 1}); render(); const ins = $$('[data-k="codigo"]'); ins[ins.length - 1].focus(); };
+    $("#rCancel").onclick = () => { S.draft = null; S.msg = null; go("inicio"); };
+    $("#rGo").onclick = () => {
+      sync();
+      d.items = d.items.filter(i => i.codigo && i.cantidad > 0);
+      if (!d.numero){ S.msg = {kind: "bad", text: "Falta el número de factura."}; return render(); }
+      if (!d.items.length){ S.msg = {kind: "bad", text: "Agrega al menos un producto con cantidad."}; return render(); }
+      const m = {}; d.items.forEach(i => { if (m[i.codigo]) m[i.codigo].cantidad += i.cantidad; else m[i.codigo] = clone(i); }); d.items = Object.values(m);
+      if (d.despachador){ S.prefs.despachador = d.despachador; savePrefs(); }
+      let nuevos = 0; d.items.forEach(i => { if (!Object.keys(S.catalogo).some(k => canon(k) === canon(i.codigo))){ S.catalogo[i.codigo] = i.descripcion || ""; nuevos++; } });
+      if (nuevos) Store.saveCatalogo();
+      const prev = getDesp(d.numero);
+      if (prev && prev.estado === "despachada"){ beep("bad"); S.msg = {kind: "bad", text: `La factura ${prev.numero} ya fue despachada por ${prev.despachador || "sin nombre"} el ${fmt(prev.fin)}. No se puede despachar dos veces.`}; return render(); }
+      S.msg = null;
+      if (prev) return empezar(clone(prev));
+      empezar({numero: d.numero, cliente: d.cliente, rif: d.rif, vendedor: d.vendedor, fecha: d.fecha, pedirSerial: d.pedirSerial, despachador: d.despachador,
+        estado: "en_proceso", inicio: now(), fin: null, pila: [],
+        items: d.items.map(i => ({codigo: i.codigo, descripcion: i.descripcion || "", cantidad: i.cantidad, hechos: 0, seriales: []}))}, true);
+    };
+  },
+  despacho(){
+    const u = $("#dUndo"); if (u) u.onclick = deshacer;
+    const c = $("#dClose"); if (c) c.onclick = cerrar;
+    $("#dPause").onclick = () => { Store.saveDesp(S.cur); S.cur = null; S.esperaSerial = null; go("inicio"); };
+  },
+  listo(){ $("#lNew").onclick = () => { S.cerrado = null; go("inicio"); }; },
+  historial(){
+    const q = $("#hq");
+    q.oninput = () => { S.hq = q.value; const p = q.selectionStart; render(); refocusSearch("#hq", p); };
+    bindHist();
+  },
+  detalle(){
+    $$("[data-back]").forEach(b => b.onclick = () => go("historial"));
+    const c = $("#dtCont"); if (c) c.onclick = () => { const d = getDesp(S.detalle); if (d) empezar(clone(d)); };
+    const dv = $("#dtDev"); if (dv) dv.onclick = () => iniciarDevolucion(S.detalle);
+    armar($("#dtDel"), "Toca de nuevo para borrar", () => { Store.removeDesp(S.detalle); go("historial"); });
+    bindHist();
+  },
+  devs(){
+    $("#dvNew").onclick = () => { S.msg = null; go("devNueva"); };
+    const q = $("#dq"); if (q) q.oninput = () => { S.dq = q.value; const p = q.selectionStart; render(); refocusSearch("#dq", p); };
+    bindHist();
+  },
+  devNueva(){
+    const buscar = () => {
+      const n = $("#nvNum").value.trim();
+      if (!n){ S.msg = {kind: "bad", text: "Escribe el número de la factura."}; return render(); }
+      const d = getDesp(n);
+      if (!d){ S.msg = {kind: "bad", text: `La factura ${n} no está en el historial de este teléfono. Si salió antes de usar la app, regístrala sin factura del sistema.`}; render(); $("#nvNum").value = n; return; }
+      iniciarDevolucion(n);
+    };
+    $("#nvBuscar").onclick = buscar;
+    $("#nvNum").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); buscar(); } });
+    $$("[data-nvpick]").forEach(b => b.onclick = () => iniciarDevolucion(b.dataset.nvpick));
+    $("#nvLibre").onclick = () => iniciarDevolucionLibre($("#nvNum").value.trim());
+    $("#nvCancel").onclick = () => { S.msg = null; go("devs"); };
+  },
+  devolucion(){
+    const dv = S.dev;
+    $("#dvMot").onchange = e => { dv.motivo = e.target.value; };
+    $("#dvNota").oninput = e => { dv.nota = e.target.value; };
+    const n = $("#dvNum"); if (n) n.oninput = e => { dv.numeroFactura = e.target.value.trim(); };
+    $("#dvSave").onclick = registrarDevolucion;
+    $("#dvUndo").onclick = deshacerDev;
+    armar($("#dvCancel"), "Toca de nuevo para cancelar", () => { S.dev = null; S.esperaSerial = null; go("devs"); });
+  },
+  devListo(){
+    $("#dlNew").onclick = () => { S.devCerrada = null; go("devNueva"); };
+    $("#dlList").onclick = () => { S.devCerrada = null; go("devs"); };
+  },
+  ajustes(){
+    $("#aDes").onchange = e => { S.prefs.despachador = e.target.value.trim(); savePrefs(); };
+    $("#aSer").onchange = e => { S.prefs.pedirSerial = e.target.checked; savePrefs(); };
+    $("#aSon").onchange = e => { S.prefs.sonido = e.target.checked; savePrefs(); };
+    $("#aCsv").onclick = exportCSV;
+    $("#aCat").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) importarCatalogo(f); });
+    const cd = $("#aCatDel"); if (cd) armar(cd, "Toca de nuevo para vaciar", () => { S.catalogo = {}; Store.saveCatalogo(); render(); });
+    $("#aJson").onclick = exportJSON;
+    $("#aImp").addEventListener("change", e => { const f = e.target.files[0]; if (f) importJSON(f); });
+    $$("[data-unalias]").forEach(b => b.onclick = () => { delete S.aliases[b.dataset.unalias]; Store.saveAliases(); render(); });
+    armar($("#aWipe"), "Toca de nuevo: se borra todo", () => {
+      lsSet("despachos", {}); lsSet("devoluciones", []); Store.load(); S.cur = null; S.dev = null;
+      S.msg = {kind: "ok", text: "Se borraron todos los despachos y devoluciones. Los códigos asociados se conservan."}; render();
+    });
+  }
+};
+
+/* ================= barra de estado ================= */
+function setStatus(kind, text, sub, acts){
+  const el = $("#status");
+  el.className = "status " + (kind || "");
+  el.innerHTML = esc(text) + (sub ? `<span class="sub">${esc(sub)}</span>` : "") + (acts ? `<div class="acts">${acts}</div>` : "");
+  const cm = $("#camMsg"); if (cm){ cm.className = "cam-msg " + (kind || ""); cm.textContent = text + (sub && kind === "bad" ? ". " + sub : ""); }
+  el.querySelectorAll("[data-act]").forEach(b => b.onclick = () => ACT[b.dataset.act]());
+}
+const serialActs = conSinSerial => (conSinSerial ? `<button class="btn sm" data-act="sinserial">Unidad sin serial</button>` : "") + `<button class="btn sm" data-act="cancelarserial">Cancelar</button>`;
+const listaActual = () => S.mode === "devolucion" ? S.dev.items : S.cur.items;
+
+/* ================= lógica del despacho ================= */
+function empezar(d, nuevo){
+  d.pila = d.pila || [];
+  d.items.forEach(i => { i.seriales = i.seriales || []; });
+  S.cur = d; S.esperaSerial = null; S.ultimo = null; S.draft = null;
+  if (nuevo) Store.saveDesp(d);
+  go("despacho");
+  const pend = totalUnits(d) - doneUnits(d);
+  setStatus("", pend ? "Escanea el primer producto." : "Todo verificado. Cierra el despacho.", nuevo ? "" : `Retomando: faltan ${pend} unidades.`);
+}
+
+function buscarEn(items, code){
+  let i = items.findIndex(it => canon(it.codigo) === canon(code));
+  if (i < 0 && S.aliases[code]) i = items.findIndex(it => canon(it.codigo) === canon(S.aliases[code]));
+  return i;
+}
+const esCodigoProducto = code => listaActual().some(it => canon(it.codigo) === canon(code)) || !!S.aliases[code];
+
+function onScan(raw){
+  const code = norm(raw);
+  if (!code) return;
+  if (S.mode === "despacho" && S.cur) return scanDespacho(code);
+  if (S.mode === "devolucion" && S.dev) return scanDevolucion(code);
+}
+
+function scanDespacho(code){
+  const d = S.cur;
+  if (S.esperaSerial !== null){
+    const it = d.items[S.esperaSerial];
+    if (esCodigoProducto(code)){ beep("bad"); return setStatus("bad", "Eso es un código de producto, no un serial", `Escanea el serial de la unidad de ${it.codigo}.`, serialActs(true)); }
+    if (d.items.some(x => x.seriales.includes(code))){ beep("bad"); return setStatus("bad", `El serial ${code} ya se escaneó en esta factura`, "Cada unidad tiene un serial distinto. Revisa la caja.", serialActs(true)); }
+    const otra = serialFuera(code, d.numero);
+    if (otra){ beep("bad"); return setStatus("bad", `El serial ${code} ya salió con la factura ${otra}`, "Esta unidad no está en el depósito. Aparta la caja y revisa.", serialActs(true)); }
+    return sumar(S.esperaSerial, code);
+  }
+  const i = buscarEn(d.items, code);
+  if (i < 0){
+    beep("bad"); S.pendienteAlias = code;
+    return setStatus("bad", `${code} no está en esta factura`, "No entregues este producto. Si es el código de barras de la caja, asócialo al producto correcto.",
+      `<button class="btn sm" data-act="asociar">Asociar a un producto</button><button class="btn sm" data-act="limpiar">Ignorar</button>`);
+  }
+  const it = d.items[i];
+  if (it.hechos >= it.cantidad){ beep("bad"); return setStatus("bad", `Sobra: ya salieron las ${it.cantidad} unidades de ${it.codigo}`, "Devuelve esta unidad al depósito."); }
+  if (d.pedirSerial){ S.esperaSerial = i; beep("warn"); return setStatus("warn", `Ahora escanea el serial de ${it.codigo}`, `Unidad ${it.hechos + 1} de ${it.cantidad}.`, serialActs(true)); }
+  sumar(i, null);
+}
+
+function sumar(i, serial){
+  const d = S.cur, it = d.items[i];
+  it.hechos++; it.seriales.push(serial || "");
+  d.pila.push(i);
+  S.esperaSerial = null; S.ultimo = i;
+  Store.saveDesp(d); beep("ok"); render(); S.ultimo = null;
+  const tot = totalUnits(d), hech = doneUnits(d);
+  if (hech === tot) setStatus("ok", "Todo verificado. Cierra el despacho.", `${tot} de ${tot} unidades.`);
+  else setStatus("ok", `${it.codigo}: ${it.hechos} de ${it.cantidad}`, (serial ? `Serial ${serial} registrado. ` : "") + `Faltan ${tot - hech} unidades en total.`);
+}
+
+function deshacer(){
+  const d = S.cur; if (!d.pila.length) return;
+  const i = d.pila.pop(), it = d.items[i];
+  it.hechos = Math.max(0, it.hechos - 1); const s = it.seriales.pop();
+  S.esperaSerial = null; Store.saveDesp(d); render();
+  setStatus("", `Se quitó una unidad de ${it.codigo}`, s ? `Serial ${s} eliminado.` : "");
+}
+
+function cerrar(){
+  const d = S.cur;
+  d.estado = "despachada"; d.fin = now(); d.despachador = d.despachador || S.prefs.despachador;
+  Store.saveDesp(d);
+  S.cerrado = clone(d); S.cur = null; S.esperaSerial = null;
+  beep("ok"); go("listo");
+}
+
+/* ================= lógica de devoluciones ================= */
+function iniciarDevolucion(numero){
+  const d = getDesp(numero); if (!d) return;
+  if (S.dev && S.dev.numeroFactura !== numero && !confirm("Hay otra devolución sin registrar. ¿Descartarla y empezar esta?")) return go("devolucion");
+  const prev = devueltoDe(numero);
+  const items = d.items.filter(it => it.hechos > 0).map(it => {
+    const r = prev[norm(it.codigo)] || {cant: 0, seriales: []};
+    const salidos = (it.seriales || []).filter(Boolean);
+    return {codigo: it.codigo, descripcion: it.descripcion, despachado: it.hechos, previo: r.cant,
+      disponibles: salidos.filter(s => !r.seriales.includes(s)), conSerial: salidos.length > 0, sinSerial: it.hechos - salidos.length,
+      ahora: 0, serialesAhora: []};
+  });
+  if (!items.some(it => it.despachado - it.previo > 0)){
+    S.msg = {kind: "bad", text: `Todas las unidades de la factura ${numero} ya fueron devueltas.`}; return go("devNueva");
+  }
+  S.dev = {id: "DV-" + Date.now(), vinculada: true, numeroFactura: numero, cliente: d.cliente, motivo: "", nota: "", items, pila: []};
+  S.esperaSerial = null; S.msg = null;
+  go("devolucion");
+  setStatus("", "Escanea el producto o el serial que devuelve el cliente.", "Solo se aceptan unidades que salieron con esta factura.");
+}
+
+function iniciarDevolucionLibre(numero){
+  S.dev = {id: "DV-" + Date.now(), vinculada: false, numeroFactura: numero || "", cliente: "", motivo: "", nota: "", items: [], pila: []};
+  S.esperaSerial = null; S.msg = null;
+  go("devolucion");
+  setStatus("", "Escanea o escribe cada producto que devuelve el cliente.");
+}
+
+function scanDevolucion(code){
+  const dv = S.dev;
+  if (!dv.vinculada){
+    let i = buscarEn(dv.items, code);
+    const real = S.aliases[code] || code;
+    if (i < 0){ dv.items.push({codigo: real, descripcion: "", ahora: 0, serialesAhora: []}); i = dv.items.length - 1; }
+    return agregarDev(i, null);
+  }
+  if (S.esperaSerial !== null){
+    const it = dv.items[S.esperaSerial];
+    if (it.serialesAhora.includes(code)){ beep("bad"); return setStatus("bad", `El serial ${code} ya está en esta devolución`, "", serialActs(it.sinSerial > 0)); }
+    if (!it.disponibles.includes(code)){
+      beep("bad");
+      return setStatus("bad", `El serial ${code} no salió con la factura ${dv.numeroFactura}`, esCodigoProducto(code) ? "Escaneaste un código de producto; escanea el serial de la caja." : "No recibas esta unidad sin revisar de qué factura viene.", serialActs(it.sinSerial > 0));
+    }
+    return agregarDev(S.esperaSerial, code);
+  }
+  // ¿Escanearon directamente un serial que salió con esta factura?
+  const porSerial = dv.items.findIndex(it => it.disponibles.includes(code) && !it.serialesAhora.includes(code));
+  if (porSerial >= 0){
+    const it = dv.items[porSerial];
+    if (it.ahora >= it.despachado - it.previo){ beep("bad"); return setStatus("bad", `Ya se completaron las unidades de ${it.codigo} que se pueden devolver`, ""); }
+    return agregarDev(porSerial, code);
+  }
+  if (dv.items.some(it => it.serialesAhora.includes(code))){ beep("bad"); return setStatus("bad", `El serial ${code} ya está en esta devolución`, ""); }
+  const i = buscarEn(dv.items, code);
+  if (i < 0){
+    beep("bad"); S.pendienteAlias = code;
+    return setStatus("bad", `${code} no salió con la factura ${dv.numeroFactura}`, "No recibas este producto en esta devolución. Si es el código de barras de la caja, asócialo al producto correcto.",
+      `<button class="btn sm" data-act="asociar">Asociar a un producto</button><button class="btn sm" data-act="limpiar">Ignorar</button>`);
+  }
+  const it = dv.items[i];
+  const max = it.despachado - it.previo;
+  if (it.ahora >= max){ beep("bad"); return setStatus("bad", `No se pueden devolver más unidades de ${it.codigo}`, `Salieron ${it.despachado}${it.previo ? ` y ya se habían devuelto ${it.previo}` : ""}.`); }
+  if (it.conSerial){ S.esperaSerial = i; beep("warn"); return setStatus("warn", `Ahora escanea el serial de ${it.codigo}`, "Debe ser uno de los seriales que salieron con esta factura.", serialActs(sinSerialLibres(it) > 0)); }
+  agregarDev(i, null);
+}
+const sinSerialLibres = it => it.sinSerial - it.serialesAhora.filter(s => !s).length;
+
+function agregarDev(i, serial){
+  const dv = S.dev, it = dv.items[i];
+  it.ahora++; it.serialesAhora.push(serial || "");
+  dv.pila.push(i); S.esperaSerial = null; S.ultimo = i;
+  beep("ok"); render(); S.ultimo = null;
+  const tot = dv.items.reduce((a, x) => a + x.ahora, 0);
+  setStatus("ok", `${it.codigo}: ${it.ahora} ${it.ahora === 1 ? "unidad" : "unidades"} a devolver`, (serial ? `Serial ${serial}. ` : "") + `Total en esta devolución: ${tot}.`);
+}
+
+function deshacerDev(){
+  const dv = S.dev; if (!dv.pila.length) return;
+  const i = dv.pila.pop(), it = dv.items[i];
+  it.ahora = Math.max(0, it.ahora - 1); const s = it.serialesAhora.pop();
+  S.esperaSerial = null; render();
+  setStatus("", `Se quitó una unidad de ${it.codigo}`, s ? `Serial ${s}.` : "");
+}
+
+function registrarDevolucion(){
+  const dv = S.dev;
+  if (!dv.motivo){ beep("bad"); setStatus("bad", "Elige el motivo de la devolución", "Está arriba, antes de la lista de productos."); const m = $("#dvMot"); if (m) m.focus(); return; }
+  const items = dv.items.filter(it => it.ahora > 0).map(it => ({codigo: it.codigo, descripcion: it.descripcion, cantidad: it.ahora, seriales: it.serialesAhora.slice()}));
+  if (!items.length) return;
+  const d = dv.vinculada ? getDesp(dv.numeroFactura) : null;
+  const reg = {id: dv.id, fecha: now(), numeroFactura: dv.numeroFactura, cliente: dv.cliente || (d && d.cliente) || "", vinculada: dv.vinculada,
+    motivo: dv.motivo, nota: dv.nota, despachador: S.prefs.despachador, items};
+  Store.addDev(reg);
+  S.devCerrada = reg; S.dev = null; S.esperaSerial = null;
+  beep("ok"); go("devListo");
+}
+
+/* ================= acciones de la barra ================= */
+const ACT = {
+  sinserial(){
+    if (S.esperaSerial === null) return;
+    if (S.mode === "devolucion") agregarDev(S.esperaSerial, null); else sumar(S.esperaSerial, null);
+  },
+  cancelarserial(){ S.esperaSerial = null; setStatus("", "Escanea el siguiente producto."); },
+  limpiar(){ S.pendienteAlias = null; setStatus("", "Escanea el siguiente producto."); },
+  asociar(){
+    const code = S.pendienteAlias, items = listaActual();
+    closeCam();
+    const cand = items.map((it, i) => ({it, i})).filter(x => S.mode === "devolucion" ? x.it.ahora < x.it.despachado - x.it.previo : x.it.hechos < x.it.cantidad);
+    $("#sheet").innerHTML = `<h2 style="margin-top:0">¿Qué producto es ${esc(code)}?</h2>
+      <p class="muted small">Desde ahora, este código se contará como el producto que elijas, en todas las facturas.</p>
+      ${cand.map(x => `<button class="pick" data-pick="${x.i}"><span class="code" style="font-size:18px">${esc(x.it.codigo)}</span><div class="small muted">${esc(x.it.descripcion)}</div></button>`).join("")}
+      <button class="btn" style="margin-top:12px" data-pick="-1">Cancelar</button>`;
+    $("#modal").hidden = false;
+    $$("#sheet [data-pick]").forEach(b => b.onclick = () => {
+      $("#modal").hidden = true;
+      const i = +b.dataset.pick; if (i < 0) return ACT.limpiar();
+      S.aliases[code] = items[i].codigo; Store.saveAliases();
+      S.pendienteAlias = null; onScan(code);
+    });
+  }
+};
+$("#modal").addEventListener("click", e => { if (e.target.id === "modal") $("#modal").hidden = true; });
+
+/* ================= entradas: cámara, teclado, lector bluetooth, foto ================= */
+const scanIn = $("#scanIn");
+const enviarManual = () => { const v = scanIn.value; scanIn.value = ""; onScan(v); };
+scanIn.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); enviarManual(); } });
+$("#scanGo").onclick = enviarManual;
+
+let qr = null, camOn = false, lastHit = {code: "", t: 0};
+async function openCam(){
+  if (!window.Html5Qrcode) return setStatus("bad", "El lector de cámara no cargó", "Revisa la conexión a internet y recarga la página.");
+  if (!window.isSecureContext) return setStatus("bad", "La cámara necesita una dirección https", "Abre la app desde el enlace https donde la publicaste.");
+  $("#cam").hidden = false;
+  $("#camMsg").className = "cam-msg"; $("#camMsg").textContent = "Apunta al código de barras o QR";
+  try {
+    qr = qr || new Html5Qrcode("reader", {verbose: false, experimentalFeatures: {useBarCodeDetectorIfSupported: true}});
+    await qr.start({facingMode: "environment"},
+      {fps: 12, qrbox: (w, h) => ({width: Math.floor(w * 0.85), height: Math.floor(Math.min(h, w) * 0.45)})},
+      text => {
+        const t = Date.now(), c = norm(text);
+        if (t - lastHit.t < 1300 || (c === lastHit.code && t - lastHit.t < 3000)) return;
+        lastHit = {code: c, t}; onScan(c);
+      }, () => {});
+    camOn = true;
+  } catch(e){
+    $("#cam").hidden = true;
+    const denied = e && /NotAllowed|Permission/i.test(String(e.name || e));
+    setStatus("bad", denied ? "No se dio permiso para usar la cámara" : "No se pudo abrir la cámara",
+      denied ? "Permite la cámara en los ajustes del navegador para este sitio y vuelve a intentar." : "Usa el botón de foto o escribe el código.");
+  }
+}
+async function closeCam(){
+  $("#cam").hidden = true;
+  if (qr && camOn){ try { await qr.stop(); } catch(e){} camOn = false; }
+}
+$("#camBtn").onclick = openCam;
+$("#camClose").onclick = closeCam;
+
+$("#photoCode").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  if (!window.Html5Qrcode) return setStatus("bad", "El lector de códigos no cargó", "Escribe el código.");
+  setStatus("", "Leyendo el código de la foto…");
+  try {
+    const r = new Html5Qrcode("reader-file", {verbose: false});
+    const text = await r.scanFile(f, false);
+    try { r.clear(); } catch(_){}
+    onScan(text);
+  } catch(err){ beep("bad"); setStatus("bad", "No se encontró un código en la foto", "Acércate más, con buena luz y el código completo en la imagen."); }
+});
+
+window.addEventListener("beforeunload", e => { if (S.dev && S.dev.pila.length){ e.preventDefault(); e.returnValue = ""; } });
+
+/* ================= recibir la factura compartida desde WhatsApp ================= */
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if (S.view === "inicio") render(); });
+window.addEventListener("appinstalled", () => { installEvt = null; if (S.view === "inicio") render(); });
+if ("serviceWorker" in navigator && window.isSecureContext && location.protocol !== "file:") navigator.serviceWorker.register("./sw.js").catch(e => console.warn("sw", e));
+
+async function recibirCompartido(){
+  const params = new URLSearchParams(location.search);
+  if (!params.has("compartido")) return;
+  history.replaceState(null, "", location.pathname);
+  try {
+    const cache = await caches.open("compartido");
+    const key = new URL("factura-compartida", location.href).href;
+    const res = await cache.match(key);
+    if (!res){ S.msg = {kind: "bad", text: "No llegó el archivo compartido. Vuelve a compartirlo desde WhatsApp."}; return render(); }
+    const blob = await res.blob();
+    const nombre = decodeURIComponent(res.headers.get("X-Nombre") || "factura");
+    await cache.delete(key);
+    const file = new File([blob], nombre, {type: blob.type});
+    if (/pdf/i.test(file.type) || /\.pdf$/i.test(nombre)) return cargarPDF(file);
+    if (/^image\//i.test(file.type)) return cargarFoto(file);
+    S.msg = {kind: "bad", text: `El archivo "${nombre}" no es un PDF ni una foto. Comparte el PDF de la factura.`}; render();
+  } catch(e){ S.msg = {kind: "bad", text: "No se pudo abrir el archivo compartido. Usa Abrir PDF de la factura."}; render(); }
+}
+
+Store.load();
+render();
+recibirCompartido();
+})();
+</script>
+</body>
+</html>

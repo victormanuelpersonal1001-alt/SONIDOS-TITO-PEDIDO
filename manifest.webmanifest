@@ -1,0 +1,29 @@
+{
+  "name": "Control de despacho",
+  "short_name": "Despacho",
+  "description": "Verificación de salida de mercancía y devoluciones",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E4E7EB",
+  "theme_color": "#1F5FAF",
+  "lang": "es",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "share_target": {
+    "action": "./compartir",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "files": [
+        {"name": "factura", "accept": ["application/pdf", ".pdf", "image/jpeg", "image/png", "image/webp", "image/*"]}
+      ]
+    }
+  }
+}
