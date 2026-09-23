@@ -9,14 +9,11 @@
 <meta name="apple-mobile-web-app-title" content="Despacho">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Control de despacho</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+<title>Sonidos Tito · Inventario y despacho</title>
+<link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 :root{
   --bg:#E4E7EB; --panel:#FFFFFF; --panel-2:#F2F4F6; --ink:#1C2530; --ink-2:#56616D; --line:#CDD3DA;
@@ -149,28 +146,61 @@ input.in{width:100%;min-height:46px;padding:8px 12px;border:1px solid var(--line
 .big-ok{text-align:center;padding:28px 10px}
 .big-ok svg{width:72px;height:72px;color:var(--ok)}
 header.top .wrap{flex-wrap:wrap;height:auto;padding-top:8px;padding-bottom:6px;gap:6px}
-.brand{width:100%}
-.tabs{width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
-.tab{padding:8px 4px;font-size:15px}
-main{padding:16px 0 240px}
+.brand{flex:1}
+.who{font-size:13px;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.who button{border:1px solid var(--line);background:var(--panel);border-radius:8px;min-height:36px;padding:4px 10px;cursor:pointer}
+.tabs{width:100%;display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
+.tab{padding:8px 2px;font-size:13px;position:relative}
+.tab .badge{position:absolute;top:2px;right:2px;background:var(--bad);color:#fff;border-radius:99px;font-size:11px;min-width:18px;padding:0 4px;line-height:18px}
+main{padding:16px 0 250px}
 .cambig{width:100%;min-height:58px;font-size:18px;margin-bottom:8px}
 .cambig .ico{width:30px;height:30px}
 select.in{appearance:auto}
 .item .meta{font-size:13px;color:var(--ink-2);margin-top:6px}
+.item .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .chip.dev{background:var(--bad-bg);color:var(--bad)}
+.chip.info{background:var(--panel-2);color:var(--ink-2)}
 .devrow{border-left:4px solid var(--bad)}
 .item.dev-on{border-color:var(--signal)}
 .item.dev-on .qty{color:var(--signal)}
+.tipo-sel{min-height:36px;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);margin-top:4px;font-size:14px;width:100%}
+.login{max-width:420px;margin:30px auto}
+.fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;margin-top:8px}
+.fotos img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.lbl-list li{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.lbl-list{list-style:none;padding:0;margin:10px 0}
+.lbl-list input{width:22px;height:22px;accent-color:var(--signal)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px}
+.kv dt{color:var(--ink-2)}.kv dd{margin:0;font-weight:600;word-break:break-all}
+.mov{font-size:14px;border-top:1px solid var(--line);padding:8px 0}
+.mov b{font-weight:600}
+#print{display:none}
+@media print{
+  body>*:not(#print){display:none!important}
+  :root{padding:0!important}
+  body{background:#fff!important}
+  #print{display:block}
+  .etq{page-break-after:always;break-after:page;overflow:hidden;display:flex;align-items:center;gap:1.5mm;padding:1mm 1.5mm;box-sizing:border-box;color:#000;font-family:Arial,Helvetica,sans-serif}
+  .etq img{flex:none}
+  .etq .tx{min-width:0;line-height:1.1}
+  .etq .s{font-weight:700}
+  .etq .c{font-weight:700}
+  .etq .d{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .etq .b{letter-spacing:.3px}
+}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <div class="brand">Control de despacho</div>
-  <nav class="tabs">
-    <button class="tab" data-go="inicio">Despachar</button>
-    <button class="tab" data-go="devs">Devoluciones</button>
-    <button class="tab" data-go="historial">Historial</button>
-    <button class="tab" data-go="ajustes">Ajustes</button>
+  <div class="brand">Sonidos Tito</div>
+  <div class="who" id="who"></div>
+  <nav class="tabs" id="tabs">
+    <button class="tab" data-go="salida">Salida</button>
+    <button class="tab" data-go="ingreso">Ingreso</button>
+    <button class="tab" data-go="devs">Devolución</button>
+    <button class="tab" data-go="inventario">Inventario</button>
+    <button class="tab" data-go="etiquetas">Etiquetas<span class="badge" id="lblBadge" hidden></span></button>
   </nav>
 </div></header>
 
@@ -198,25 +228,32 @@ select.in{appearance:auto}
 </div>
 <div id="reader-file"></div>
 <div class="modal" id="modal" hidden><div class="sheet" id="sheet"></div></div>
-
+<div id="print"></div>
+<div id="qrtmp" style="position:absolute;left:-9999px;top:0"></div>
 <script>
 (function(){
 "use strict";
+
+/* ================= conexión ================= */
+const SUPA_URL = "https://hjcvfxfidjlxxpqvihqm.supabase.co";
+const SUPA_KEY = "sb_publishable_hdFG-qfnXHtUGGz1BwZshw_N5CobWsG";
 
 /* ================= utilidades ================= */
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm = s => String(s || "").trim().toUpperCase().replace(/\s+/g, " ");
+const canon = s => norm(s).replace(/\s/g, "").replace(/[OQ]/g, "0").replace(/[I|]/g, "1");
 const clone = o => JSON.parse(JSON.stringify(o));
 const now = () => new Date().toISOString();
 const fmt = iso => { if (!iso) return ""; try { return new Date(iso).toLocaleString("es-VE", {day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); } catch(e){ return iso; } };
 const num = s => parseFloat(String(s).replace(/\./g, "").replace(",", "."));
+const n2 = x => Math.round((Number(x) || 0) * 100) / 100;
+const fnum = x => n2(x).toLocaleString("es-VE", {maximumFractionDigits: 2});
 const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } };
-const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ alert("No se pudo guardar en este teléfono: el almacenamiento está lleno o bloqueado. Exporta un respaldo y borra registros viejos."); return false; } };
-const totalUnits = d => d.items.reduce((a, i) => a + i.cantidad, 0);
-const doneUnits = d => d.items.reduce((a, i) => a + i.hechos, 0);
-const canon = s => norm(s).replace(/\s/g, "").replace(/[OQ]/g, "0").replace(/[I|]/g, "1");
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+const MOTIVOS = ["Garantía o falla", "Cambio por otro producto", "Error de despacho", "El cliente desistió", "Otro"];
+const TIPOS = {serial: "Unidad con serial", sinserial: "Unidad sin serial", metro: "Por metro (rollo)"};
 function lev(a, b){
   if (a === b) return 0; if (!a.length) return b.length; if (!b.length) return a.length;
   let prev = Array.from({length: b.length + 1}, (_, j) => j);
@@ -234,67 +271,101 @@ function loadScript(src){
     document.head.appendChild(el);
   });
 }
-const MOTIVOS = ["Garantía o falla", "Cambio por otro producto", "Error de despacho", "El cliente desistió", "Otro"];
+const errMsg = e => {
+  const m = (e && (e.message || e.error_description)) || String(e || "Error");
+  if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return "Sin conexión a internet. Revisa la señal e intenta de nuevo.";
+  if (/Invalid login credentials/i.test(m)) return "Correo o contraseña incorrectos.";
+  const x = m.match(/^[A-Z_]+: (.*)$/s);
+  return x ? x[1] : m;
+};
 
 /* ================= estado ================= */
 const S = {
-  view: "inicio", mode: null,
-  draft: null, cur: null, dev: null, esperaSerial: null,
-  lista: [], devs: [], aliases: {}, catalogo: {},
-  detalle: null, cerrado: null, devCerrada: null, hq: "", dq: "", msg: null, pendienteAlias: null, ultimo: null,
-  prefs: Object.assign({despachador: "", pedirSerial: true, sonido: true}, lsGet("prefs", {}))
+  view: "login", mode: null, user: null, perfil: null, busy: false,
+  prod: {}, canonIdx: {}, codes: {},
+  draft: null, cur: null, espera: null, ultimo: null, cerrado: null,
+  ing: null, ingDraft: null, ingCerrado: null,
+  dev: null, devCerrada: null,
+  hist: [], hq: "", detalle: null, detalleData: null,
+  ingLista: [], proveedores: [],
+  inv: null, invQ: "",
+  etq: [], etqSel: {},
+  msg: null, pendienteAlias: null, pendFile: null,
+  prefs: Object.assign({sonido: true, transicion: true, etiqueta: "50x25"}, lsGet("prefs3", {}))
 };
-const savePrefs = () => lsSet("prefs", S.prefs);
+const savePrefs = () => lsSet("prefs3", S.prefs);
+const esAdmin = () => S.perfil && S.perfil.rol === "admin";
+const nombreUsuario = () => (S.perfil && (S.perfil.nombre || S.perfil.email)) || "";
 
-/* ================= almacenamiento local ================= */
-const Store = {
-  load(){
-    const all = lsGet("despachos", {});
-    S.lista = Object.values(all).sort((a, b) => (b.actualizado || "").localeCompare(a.actualizado || ""));
-    S.devs = lsGet("devoluciones", []).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
-    S.aliases = lsGet("aliases", {});
-    S.catalogo = lsGet("catalogo", {});
+/* ================= base de datos ================= */
+let sb = null;
+const DB = {
+  async q(p){ const r = await p; if (r.error) throw r.error; return r.data; },
+  async all(table, build){
+    let out = [], from = 0;
+    for (;;){
+      let q = sb.from(table).select("*");
+      if (build) q = build(q);
+      const data = await this.q(q.range(from, from + 999));
+      out = out.concat(data || []);
+      if (!data || data.length < 1000) break;
+      from += 1000;
+    }
+    return out;
   },
-  saveCatalogo(){ lsSet("catalogo", S.catalogo); },
-  saveDesp(d){
-    d.actualizado = now();
-    d.seriales = [].concat(...d.items.map(i => i.seriales || [])).filter(Boolean);
-    const all = lsGet("despachos", {});
-    all[d.numero] = clone(d);
-    lsSet("despachos", all);
-    this.load();
-  },
-  removeDesp(numero){ const all = lsGet("despachos", {}); delete all[numero]; lsSet("despachos", all); this.load(); },
-  addDev(dv){ const l = lsGet("devoluciones", []); l.push(clone(dv)); lsSet("devoluciones", l); this.load(); },
-  removeDev(id){ lsSet("devoluciones", lsGet("devoluciones", []).filter(d => d.id !== id)); this.load(); },
-  saveAliases(){ lsSet("aliases", S.aliases); }
+  one(table, col, val){ return this.q(sb.from(table).select("*").eq(col, val).maybeSingle()); },
+  insert(table, rows){ return this.q(sb.from(table).insert(rows)); },
+  upsert(table, rows, opts){ return this.q(sb.from(table).upsert(rows, opts)); },
+  update(table, col, val, patch){ return this.q(sb.from(table).update(patch).eq(col, val)); },
+  del(table, col, val){ return this.q(sb.from(table).delete().eq(col, val)); },
+  rpc(fn, args){ return this.q(sb.rpc(fn, args)); }
 };
-const getDesp = n => S.lista.find(d => d.numero === n) || null;
-const devsDe = n => S.devs.filter(d => d.numeroFactura === n);
-
-/* Lo ya devuelto de una factura: por código, unidades y seriales */
-function devueltoDe(numero){
-  const out = {};
-  devsDe(numero).forEach(dv => dv.items.forEach(it => {
-    const k = norm(it.codigo);
-    out[k] = out[k] || {cant: 0, seriales: []};
-    out[k].cant += it.cantidad;
-    (it.seriales || []).forEach(s => s && out[k].seriales.push(s));
-  }));
-  return out;
+let cola = Promise.resolve();
+function enqueue(fn){
+  cola = cola.then(fn).catch(e => { console.error(e); toast("No se pudo guardar: " + errMsg(e)); });
+  return cola;
 }
-/* ¿Este serial está hoy fuera del depósito con otra factura? (salió y no se devolvió) */
-function serialFuera(serial, excluir){
-  for (const d of S.lista){
-    if (d.numero === excluir || !(d.seriales || []).includes(serial)) continue;
-    const dev = devueltoDe(d.numero);
-    const devuelto = Object.values(dev).some(x => x.seriales.includes(serial));
-    if (!devuelto) return d.numero;
-  }
-  return null;
+function toast(t){ S.msg = {kind: "bad", text: t}; if (!["despacho","ingresoRecibir","devolucion"].includes(S.view)) render(); else setStatus("bad", t); }
+
+/* ---- catálogo en memoria ---- */
+async function cargarCatalogo(){
+  const [p, c] = await Promise.all([DB.all("productos"), DB.all("codigos_barra")]);
+  S.prod = {}; S.canonIdx = {}; S.codes = {};
+  p.forEach(x => { S.prod[x.codigo] = x; S.canonIdx[canon(x.codigo)] = x.codigo; });
+  c.forEach(x => { S.codes[canon(x.codigo)] = x.producto; });
+}
+const productoDe = code => { const c = canon(code); return S.canonIdx[c] || S.codes[c] || null; };
+const tipoDe = p => !p ? "serial" : p.tipo_venta === "metro" ? "metro" : p.controla_serial ? "serial" : "sinserial";
+const tipoAProducto = t => t === "metro" ? {tipo_venta: "metro", controla_serial: false} : {tipo_venta: "unidad", controla_serial: t === "serial"};
+const adivinarTipo = desc => /CABLE|METRO|MTS|\bMT\b|ROLLO|BOBINA/i.test(desc || "") ? "metro" : "serial";
+async function asegurarProductos(lineas){
+  const nuevos = [];
+  lineas.forEach(l => {
+    const cod = norm(l.producto || l.codigo);
+    if (!S.prod[cod] && !nuevos.some(n => n.codigo === cod)) nuevos.push(Object.assign({codigo: cod, descripcion: l.descripcion || ""}, tipoAProducto(l.tipo || adivinarTipo(l.descripcion))));
+  });
+  if (!nuevos.length) return;
+  await DB.upsert("productos", nuevos, {onConflict: "codigo", ignoreDuplicates: true});
+  nuevos.forEach(p => { S.prod[p.codigo] = p; S.canonIdx[canon(p.codigo)] = p.codigo; });
+}
+async function asociarCodigo(barcode, producto){
+  const c = norm(barcode);
+  await DB.upsert("codigos_barra", {codigo: c, producto, origen: "fabricante"}, {onConflict: "codigo"});
+  S.codes[canon(c)] = producto;
+}
+async function contarEtiquetas(){
+  try {
+    const r = await sb.from("etiquetas").select("id", {count: "exact", head: true}).eq("impresa", false);
+    const n = r.count || 0, b = $("#lblBadge");
+    b.hidden = !n; b.textContent = n > 99 ? "99+" : n;
+  } catch(e){}
+}
+async function nuevaEtiqueta(row){
+  await DB.insert("etiquetas", row);
+  contarEtiquetas();
 }
 
-/* ================= sonido y vibración ================= */
+/* ================= sonido ================= */
 let actx = null;
 function beep(kind){
   if (navigator.vibrate) navigator.vibrate(kind === "ok" ? 60 : kind === "warn" ? 40 : [120, 60, 120]);
@@ -311,21 +382,9 @@ function beep(kind){
   } catch(e){}
 }
 
-/* ================= lectura del PDF de Saint ================= */
-const EJEMPLO = {
-  numero: "PRUEBA-10095", cliente: "Cliente de prueba", rif: "", vendedor: "VICTOR GONZALEZ", fecha: "18 de septiembre del 2026",
-  items: [
-    {codigo:"EVO6-400.4", descripcion:"AMPLIFICADOR 4 CANALES 400RMS 4 OHM", cantidad:10},
-    {codigo:"EVO6-800.4", descripcion:"AMPLIFICADOR 4 CANALES 800 RMS 4 OHM", cantidad:10},
-    {codigo:"EVO6-3000.1.1", descripcion:"AMPLIFICADOR 1 CANAL 3000RMS 1 OHM", cantidad:3},
-    {codigo:"EVO6-3000.1.2", descripcion:"AMPLIFICADOR 1 CANAL 3000RMS 2 OHM", cantidad:3},
-    {codigo:"EVO6-1200.1.1", descripcion:"AMPLIFICADOR 1 CANAL 1200RMS 1 OHM", cantidad:4},
-    {codigo:"EVO5-1200.4", descripcion:"AMPLIFICADOR 4 CANALES 1200RMS 2 OHM", cantidad:2}
-  ]
-};
-
+/* ================= lectura de facturas (PDF y foto) ================= */
 async function pdfLineas(file){
-  if (!window.pdfjsLib) throw new Error("El lector de PDF no cargó. Revisa la conexión a internet y recarga la página.");
+  await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
   pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
   const out = [];
@@ -343,7 +402,6 @@ async function pdfLineas(file){
   }
   return out;
 }
-
 function parseFactura(lines, ocr){
   const text = lines.join("\n");
   const pick = re => { const m = text.match(re); return m ? m[1].trim() : ""; };
@@ -358,7 +416,6 @@ function parseFactura(lines, ocr){
   const re = /^([A-Z0-9][A-Z0-9.\-\/]{1,})\s+(.+?)\s+(\d+(?:,\d+)?)\s+(\d{1,3}(?:\.\d{3})*,\d{2})\s+(\d{1,3}(?:\.\d{3})*,\d{2})$/i;
   const cuadra = (q, pr, tot) => Math.abs(q * pr - tot) <= Math.max(0.05, tot * 0.01);
   lines.forEach(raw => {
-    // limpieza de ruido típico del reconocimiento de texto
     const l = raw.replace(/^[^A-Za-z0-9]+/, "").replace(/(\d)\s*,\s*(\d{2})\b/g, "$1,$2").replace(/(\d)\s*\.\s*(\d{3})\b/g, "$1.$2").replace(/\s+/g, " ").trim();
     const m = l.match(re); if (!m) return;
     let q = num(m[3]); const pr = num(m[4]), tot = num(m[5]);
@@ -366,59 +423,45 @@ function parseFactura(lines, ocr){
     if (!cuadra(q, pr, tot)){
       if (!ocr) return;
       const deduc = pr > 0 ? tot / pr : 0;
-      if (deduc >= 1 && Math.abs(deduc - Math.round(deduc)) < 0.01){ nota = `Cantidad corregida con el total: se leyó ${m[3]}.`; q = Math.round(deduc); }
+      if (deduc > 0 && Math.abs(deduc * 100 - Math.round(deduc * 100)) < 1){ nota = `Cantidad corregida con el total: se leyó ${m[3]}.`; q = n2(deduc); }
       else nota = "Los números de este renglón no cuadran: verifica la cantidad.";
     }
     if (!(q > 0)) return;
-    f.items.push({codigo: norm(m[1]), descripcion: m[2].trim(), cantidad: Math.round(q), nota});
+    f.items.push({codigo: norm(m[1]), descripcion: m[2].trim(), cantidad: n2(q), nota});
   });
   return f;
 }
-
-async function cargarPDF(file){
-  S.msg = {kind: "busy", text: "Leyendo el PDF…"}; render();
-  try {
-    const f = parseFactura(await pdfLineas(file));
-    if (!f.items.length) throw new Error("No se encontraron productos en este PDF. Revisa que sea una factura de Saint o cárgala a mano.");
-    abrirRevision(f, "pdf");
-  } catch(e){ S.msg = {kind: "bad", text: e.message || "No se pudo leer el PDF."}; render(); }
-}
-
-/* ---- ajuste de códigos leídos contra el catálogo ---- */
 function ajustarConCatalogo(items){
-  const codes = Object.keys(S.catalogo);
+  const codes = Object.keys(S.prod);
   if (!codes.length) return items;
   const tokens = t => new Set(norm(t).split(/[^A-Z0-9]+/).filter(x => x.length > 1));
   const simDesc = (a, b) => { const A = tokens(a), B = tokens(b); if (!A.size || !B.size) return 0; let n = 0; A.forEach(x => { if (B.has(x)) n++; }); return n / Math.max(A.size, B.size); };
-  const exactos = new Set(items.map(it => codes.find(k => canon(k) === canon(it.codigo))).filter(Boolean));
+  const exactos = new Set(items.map(it => productoDe(it.codigo)).filter(Boolean));
   return items.map(it => {
-    const c = canon(it.codigo);
-    const exacto = codes.find(k => canon(k) === c);
-    if (exacto) return Object.assign({}, it, {codigo: exacto, descripcion: S.catalogo[exacto] || it.descripcion});
-    const tope = Math.max(1, Math.floor(c.length * 0.2));
+    const exacto = productoDe(it.codigo);
+    if (exacto) return Object.assign({}, it, {codigo: exacto, descripcion: S.prod[exacto] ? S.prod[exacto].descripcion || it.descripcion : it.descripcion});
+    const c = canon(it.codigo), tope = Math.max(1, Math.floor(c.length * 0.2));
     const cands = codes.map(k => ({k, d: lev(c, canon(k))})).filter(x => x.d <= tope && !exactos.has(x.k))
-      .map(x => Object.assign(x, {score: x.d - simDesc(it.descripcion, S.catalogo[x.k]) * 0.9})).sort((a, b) => a.score - b.score);
-    if (!cands.length) return Object.assign({}, it, {nota: `No está en el catálogo: verifica el código. ${it.nota || ""}`.trim()});
+      .map(x => Object.assign(x, {score: x.d - simDesc(it.descripcion, S.prod[x.k].descripcion) * 0.9})).sort((a, b) => a.score - b.score);
+    if (!cands.length) return Object.assign({}, it, {nota: `Producto nuevo: no está en el catálogo. ${it.nota || ""}`.trim()});
     if (cands.length > 1 && cands[1].score - cands[0].score < 0.15)
       return Object.assign({}, it, {nota: `Código dudoso (se leyó ${it.codigo}): puede ser ${cands.slice(0, 3).map(x => x.k).join(" o ")}. ${it.nota || ""}`.trim()});
     const best = cands[0].k;
-    return Object.assign({}, it, {codigo: best, descripcion: S.catalogo[best] || it.descripcion, nota: `Código corregido con el catálogo: se leyó ${it.codigo}. ${it.nota || ""}`.trim()});
+    return Object.assign({}, it, {codigo: best, descripcion: S.prod[best].descripcion || it.descripcion, nota: `Código corregido con el catálogo: se leyó ${it.codigo}. ${it.nota || ""}`.trim()});
   });
 }
-
-/* ---- reconocimiento de la foto de la factura ---- */
 let ocrWorker = null, ocrProgreso = null;
-async function prepararImagen(file){
+async function prepararImagen(file, maxLado, gris){
   let img;
   try { img = await createImageBitmap(file, {imageOrientation: "from-image"}); }
   catch(e){ img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error("No se pudo abrir la foto.")); im.src = URL.createObjectURL(file); }); }
-  const scale = Math.min(2.5, 3000 / Math.max(img.width, img.height));
+  const scale = Math.min(gris ? 2.5 : 1, maxLado / Math.max(img.width, img.height));
   const cv = document.createElement("canvas");
   cv.width = Math.round(img.width * scale); cv.height = Math.round(img.height * scale);
   const cx = cv.getContext("2d", {willReadFrequently: true});
   cx.drawImage(img, 0, 0, cv.width, cv.height);
-  const id = cx.getImageData(0, 0, cv.width, cv.height), px = id.data;
-  const hist = new Uint32Array(256);
+  if (!gris) return cv;
+  const id = cx.getImageData(0, 0, cv.width, cv.height), px = id.data, hist = new Uint32Array(256);
   for (let i = 0; i < px.length; i += 4){ const g = (px[i] * 299 + px[i + 1] * 587 + px[i + 2] * 114) / 1000 | 0; px[i] = g; hist[g]++; }
   const total = px.length / 4; let acc = 0, lo = 0, hi = 255;
   for (let v = 0; v < 256; v++){ acc += hist[v]; if (acc > total * 0.01){ lo = v; break; } }
@@ -428,248 +471,770 @@ async function prepararImagen(file){
   cx.putImageData(id, 0, 0);
   return cv;
 }
-async function cargarFoto(file){
-  const foto = URL.createObjectURL(file);
-  const paso = t => { S.msg = {kind: "busy", text: t}; render(); };
-  try {
-    paso("Preparando la foto…");
-    const cv = await prepararImagen(file);
-    if (!ocrWorker){
-      paso("Descargando el lector de texto (solo la primera vez, puede tardar un minuto)…");
-      await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");
-      ocrWorker = await Tesseract.createWorker("spa", 1, {logger: m => { if (ocrProgreso) ocrProgreso(m); }});
-      await ocrWorker.setParameters({tessedit_pageseg_mode: "6", preserve_interword_spaces: "1"});
-    }
-    paso("Leyendo la factura… 0%");
-    ocrProgreso = m => { if (m.status === "recognizing text"){ const el = document.querySelector(".note.ok"); if (el) el.innerHTML = `<span class="spin"></span> Leyendo la factura… ${Math.round(m.progress * 100)}%`; } };
-    const {data} = await ocrWorker.recognize(cv);
-    ocrProgreso = null;
-    const f = parseFactura(data.text.split("\n"), true);
-    if (!f.items.length) throw new Error("No se reconocieron productos. Toma la foto de frente, con buena luz, sin sombras y con la tabla de productos completa y enfocada.");
-    f.items = ajustarConCatalogo(f.items);
-    f.foto = foto;
-    abrirRevision(f, "foto");
-  } catch(e){
-    ocrProgreso = null;
-    S.msg = {kind: "bad", text: e.message || "No se pudo leer la foto."}; render();
+async function leerFoto(file, onPaso){
+  const cv = await prepararImagen(file, 3000, true);
+  if (!ocrWorker){
+    onPaso("Descargando el lector de texto (solo la primera vez, puede tardar un minuto)…");
+    await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");
+    ocrWorker = await Tesseract.createWorker("spa", 1, {logger: m => { if (ocrProgreso) ocrProgreso(m); }});
+    await ocrWorker.setParameters({tessedit_pageseg_mode: "6", preserve_interword_spaces: "1"});
   }
+  onPaso("Leyendo la factura… 0%");
+  ocrProgreso = m => { if (m.status === "recognizing text"){ const el = document.querySelector(".note.ok"); if (el) el.innerHTML = `<span class="spin"></span> Leyendo la factura… ${Math.round(m.progress * 100)}%`; } };
+  try { const {data} = await ocrWorker.recognize(cv); return data.text.split("\n"); }
+  finally { ocrProgreso = null; }
+}
+/* Lee un archivo (PDF o foto) y devuelve la factura interpretada */
+async function leerArchivo(file){
+  const paso = t => { S.msg = {kind: "busy", text: t}; render(); };
+  const esPdf = /pdf/i.test(file.type) || /\.pdf$/i.test(file.name || "");
+  let f;
+  if (esPdf){ paso("Leyendo el PDF…"); f = parseFactura(await pdfLineas(file), false); }
+  else { paso("Preparando la foto…"); f = parseFactura(await leerFoto(file, paso), true); f.foto = URL.createObjectURL(file); }
+  if (!f.items.length) throw new Error(esPdf ? "No se encontraron productos en este PDF. Cárgala a mano." : "No se reconocieron productos. Toma la foto de frente, con buena luz y la tabla completa y enfocada.");
+  f.items = ajustarConCatalogo(f.items);
+  f.origen = esPdf ? "pdf" : "foto";
+  S.msg = null;
+  return f;
 }
 
-function abrirRevision(f, origen){
-  S.draft = Object.assign({rif: "", vendedor: "", fecha: "", cliente: ""}, clone(f), {origen});
-  S.draft.pedirSerial = S.prefs.pedirSerial;
-  S.draft.despachador = S.prefs.despachador;
-  S.msg = null; go("revisar");
-}
-
-/* ================= navegación ================= */
-const SCAN_VIEWS = ["despacho", "devolucion"];
+/* ================= navegación y render ================= */
+const SCAN_VIEWS = {despacho: "despacho", ingresoRecibir: "ingreso", devolucion: "devolucion", inventario: "buscar"};
 function go(v){
-  S.view = v;
-  S.mode = v === "despacho" ? "despacho" : v === "devolucion" ? "devolucion" : null;
+  S.view = v; S.mode = SCAN_VIEWS[v] || null;
   if (!S.mode) closeCam();
   render(); window.scrollTo(0, 0);
+  if (v === "inventario") setStatus("", "Escanea un serial, rollo o producto para buscarlo.");
 }
 $$("[data-go]").forEach(b => b.addEventListener("click", () => {
-  const v = b.dataset.go;
-  if (v === "inicio" && S.cur) return go("despacho");
-  if (v === "devs" && S.dev) return go("devolucion");
-  S.msg = null; go(v);
+  const v = b.dataset.go; S.msg = null;
+  if (v === "salida") return S.cur ? go("despacho") : (go("salida"), cargarHistorial());
+  if (v === "ingreso") return S.ing ? go("ingresoRecibir") : (go("ingreso"), cargarIngresos());
+  if (v === "devs"){ if (S.dev) return go("devolucion"); S.devLista = null; return go("devs"); }
+  if (v === "etiquetas"){ go("etiquetas"); return cargarEtiquetas(); }
+  go(v);
 }));
 
 function render(){
-  const grupo = {inicio: ["inicio","revisar","despacho","listo"], devs: ["devs","devNueva","devolucion","devListo"], historial: ["historial","detalle"], ajustes: ["ajustes"]};
+  const logged = !!S.perfil;
+  $("#tabs").hidden = !logged;
+  $("#who").innerHTML = logged ? `<span>${esc(nombreUsuario())}</span><button id="bAjustes" aria-label="Ajustes">⚙️</button>` : "";
+  if (logged) $("#bAjustes").onclick = () => { S.msg = null; go("ajustes"); };
+  const grupo = {salida: ["salida","revisar","despacho","listo","detalle"], ingreso: ["ingreso","ingresoRevisar","ingresoRecibir","ingresoListo"], devs: ["devs","devNueva","devolucion","devListo"], inventario: ["inventario"], etiquetas: ["etiquetas"]};
   $$(".tab").forEach(t => { if ((grupo[t.dataset.go] || []).includes(S.view)) t.setAttribute("aria-current", "page"); else t.removeAttribute("aria-current"); });
-  $("#dock").hidden = !SCAN_VIEWS.includes(S.view);
-  const V = {inicio: vInicio, revisar: vRevisar, despacho: vDespacho, listo: vListo, historial: vHistorial, detalle: vDetalle, ajustes: vAjustes, devs: vDevs, devNueva: vDevNueva, devolucion: vDevolucion, devListo: vDevListo};
-  $("#app").innerHTML = (V[S.view] || vInicio)();
+  $("#dock").hidden = !S.mode;
+  const V = {login: vLogin, salida: vSalida, revisar: vRevisar, despacho: vDespacho, listo: vListo, detalle: vDetalle,
+    ingreso: vIngreso, ingresoRevisar: vIngresoRevisar, ingresoRecibir: vIngresoRecibir, ingresoListo: vIngresoListo,
+    devs: vDevs, devNueva: vDevNueva, devolucion: vDevolucion, devListo: vDevListo,
+    inventario: vInventario, etiquetas: vEtiquetas, ajustes: vAjustes};
+  $("#app").innerHTML = (V[S.view] || vLogin)();
   if (bind[S.view]) bind[S.view]();
 }
-
 const msgBox = () => !S.msg ? "" : S.msg.kind === "busy"
   ? `<div class="note ok"><span class="spin"></span> ${esc(S.msg.text)}</div>`
   : `<div class="note ${S.msg.kind === "bad" ? "bad" : S.msg.kind === "ok" ? "ok" : ""}">${esc(S.msg.text)}</div>`;
-
 const ICO = {
   cam: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
   pdf: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h6"/></svg>',
   pen: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
-  play: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4z"/></svg>',
   back: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14l-5-5 5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg>',
+  box: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',
   ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M7 12.5l3.2 3.2L17 9"/></svg>'
 };
+function meter(hechos, cantidad){
+  const segs = Math.max(1, Math.min(Math.ceil(cantidad), 20)), on = Math.min(segs, Math.round(hechos / cantidad * segs));
+  return `<div class="meter" aria-hidden="true">${Array.from({length: segs}, (_, k) => `<i class="${k < on ? "on" : ""}"></i>`).join("")}</div>`;
+}
+const serialList = (arr, titulo) => { const s = (arr || []).filter(Boolean); return s.length ? `<div class="serials">${titulo || "Seriales"}: ${s.map(x => `<b>${esc(x)}</b>`).join(", ")}</div>` : ""; };
+const cortesList = arr => (arr && arr.length) ? `<div class="serials">Cortes: ${arr.map(c => `<b>${esc(c.serial)}</b> ${fnum(c.metros)} m`).join(", ")}</div>` : "";
+const qtyTxt = (h, c, tipo) => tipo === "metro" ? `${fnum(h)}/${fnum(c)} m` : `${fnum(h)}/${fnum(c)}`;
+const completa = it => it.hechos >= it.cantidad - 0.001;
+function armar(btn, texto, accion){
+  if (!btn) return;
+  btn.onclick = () => {
+    if (btn.dataset.armed) return accion();
+    const orig = btn.innerHTML;
+    btn.dataset.armed = "1"; btn.textContent = texto;
+    setTimeout(() => { if (btn.isConnected){ delete btn.dataset.armed; btn.innerHTML = orig; } }, 3500);
+  };
+}
+function sheet(html, onBind){
+  $("#sheet").innerHTML = html; $("#modal").hidden = false;
+  if (onBind) onBind($("#sheet"));
+  const f = $("#sheet").querySelector("[autofocus]"); if (f) setTimeout(() => f.focus(), 50);
+}
+const cerrarSheet = () => { $("#modal").hidden = true; };
+$("#modal").addEventListener("click", e => { if (e.target.id === "modal") cerrarSheet(); });
+function pedirNumero(titulo, texto, valor, onOk, extra){
+  sheet(`<h2 style="margin-top:0">${esc(titulo)}</h2><p class="muted small">${esc(texto)}</p>
+    <input class="in" id="shNum" inputmode="decimal" value="${esc(valor)}" autofocus>
+    ${extra || ""}
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="shOk">Confirmar</button><button class="btn" id="shNo">Cancelar</button></div>`, sh => {
+    const ok = () => { const v = n2(num($("#shNum").value)); if (!(v > 0)) { $("#shNum").focus(); return; } cerrarSheet(); onOk(v, sh); };
+    $("#shOk").onclick = ok; $("#shNo").onclick = () => { cerrarSheet(); S.espera = null; setStatus("", "Operación cancelada."); };
+    $("#shNum").addEventListener("keydown", e => { if (e.key === "Enter") ok(); });
+  });
+}
+function selectorTipo(i, t, grupo){
+  return `<select class="tipo-sel" data-tipo="${i}" data-g="${grupo}">${Object.entries(TIPOS).map(([k, v]) => `<option value="${k}" ${k === t ? "selected" : ""}>${esc(v)}</option>`).join("")}</select>`;
+}
 
-/* ================= vistas: despacho ================= */
-function vInicio(){
-  const enCurso = S.lista.filter(d => d.estado === "en_proceso").slice(0, 5);
+/* ================= inicio de sesión ================= */
+function vLogin(){
+  return `<div class="login">
+    <h1>Entrar</h1>
+    <p class="muted">Usa el correo y la contraseña que te dio el administrador.</p>
+    ${msgBox()}
+    <div class="panel stack" style="margin-top:12px">
+      <div><label class="f" for="lEmail">Correo</label><input class="in" id="lEmail" type="email" autocomplete="username" inputmode="email" value="${esc(S.loginEmail || lsGet("ultimoEmail", ""))}"></div>
+      <div><label class="f" for="lPass">Contraseña</label><input class="in" id="lPass" type="password" autocomplete="current-password"></div>
+      <button class="btn primary" id="lGo">Entrar</button>
+    </div></div>`;
+}
+async function entrar(){
+  const email = $("#lEmail").value.trim(), pass = $("#lPass").value;
+  S.loginEmail = email;
+  if (!email || !pass){ S.msg = {kind: "bad", text: "Escribe el correo y la contraseña."}; return render(); }
+  S.msg = {kind: "busy", text: "Entrando…"}; render();
+  try {
+    const r = await sb.auth.signInWithPassword({email, password: pass});
+    if (r.error) throw r.error;
+    lsSet("ultimoEmail", email);
+    await arrancar(r.data.user);
+  } catch(e){ S.msg = {kind: "bad", text: errMsg(e)}; render(); }
+}
+async function arrancar(user){
+  S.user = user;
+  S.msg = {kind: "busy", text: "Cargando el catálogo…"}; S.view = "login"; render();
+  try {
+    S.perfil = await DB.one("perfiles", "id", user.id);
+    if (!S.perfil || !S.perfil.activo){ await sb.auth.signOut(); S.perfil = null; S.msg = {kind: "bad", text: "Tu usuario está desactivado o no tiene perfil. Habla con el administrador."}; return render(); }
+    await cargarCatalogo();
+    S.msg = null;
+    go("salida"); cargarHistorial(); contarEtiquetas(); suscribir();
+    recibirCompartido();
+  } catch(e){ S.msg = {kind: "bad", text: "No se pudo cargar: " + errMsg(e)}; render(); }
+}
+function suscribir(){
+  try {
+    sb.channel("etiquetas").on("postgres_changes", {event: "*", schema: "public", table: "etiquetas"}, () => {
+      contarEtiquetas(); if (S.view === "etiquetas") cargarEtiquetas();
+    }).subscribe();
+  } catch(e){ console.warn(e); }
+}
+
+/* ================= SALIDA (despacho) ================= */
+async function cargarHistorial(){
+  try {
+    S.hist = await DB.q(sb.from("despachos").select("numero,cliente,estado,fin,actualizado,datos").order("actualizado", {ascending: false}).limit(150));
+    if (S.view === "salida") render();
+  } catch(e){ console.warn(e); }
+}
+function histRow(d){
+  const ok = d.estado === "despachada", items = (d.datos && d.datos.items) || [];
+  const hech = items.filter(completa).length;
+  return `<li><button data-open="${esc(d.numero)}">
+    <div class="grow"><div class="n">${esc(d.numero)}</div><div class="c">${esc(d.cliente || "Sin cliente")}${d.datos && d.datos.despachador ? ", " + esc(d.datos.despachador) : ""}</div></div>
+    <div style="text-align:right"><span class="chip ${ok ? "ok" : "warn"}">${ok ? "Despachada" : `En curso ${hech}/${items.length}`}</span>
+    <div class="small muted" style="margin-top:4px">${esc(fmt(d.fin || d.actualizado))}</div></div>
+  </button></li>`;
+}
+function vSalida(){
+  const q = norm(S.hq);
+  const list = !q ? S.hist : S.hist.filter(d => norm(d.numero).includes(q) || norm(d.cliente).includes(q));
+  const enCurso = S.hist.filter(d => d.estado === "en_proceso");
   return `
-  <h1>Nueva salida</h1>
-  <p class="muted">Carga la factura y verifica cada producto antes de entregarlo.</p>
+  <h1>Salida de mercancía</h1>
+  <p class="muted">Carga la factura de venta y verifica cada producto antes de entregarlo.</p>
   ${msgBox()}
-  ${!Object.keys(S.catalogo).length ? `<p class="muted small" style="margin-top:8px">Consejo: importa tu catálogo de productos en Ajustes para que los códigos leídos con la cámara se corrijan solos.</p>` : ""}
   <div class="source" style="margin-top:12px">
-    <label class="btn primary">${ICO.cam}
-      <span><span class="t">Escanear factura con la cámara</span><span class="d">Toma una foto de la factura impresa y se leen los productos.</span></span>
-      <input type="file" accept="image/*" capture="environment" id="inFoto" hidden>
-    </label>
-    <label class="btn">${ICO.pdf}
-      <span><span class="t">Abrir PDF de la factura</span><span class="d">Si tienes el PDF que genera Saint.</span></span>
-      <input type="file" accept="application/pdf,.pdf" id="inPdf" hidden>
-    </label>
+    <label class="btn primary">${ICO.cam}<span><span class="t">Escanear factura con la cámara</span><span class="d">Foto de la factura impresa.</span></span>
+      <input type="file" accept="image/*" capture="environment" id="inFoto" hidden></label>
+    <label class="btn">${ICO.pdf}<span><span class="t">Abrir PDF de la factura</span><span class="d">O compártelo desde WhatsApp a "Despacho".</span></span>
+      <input type="file" accept="application/pdf,.pdf" id="inPdf" hidden></label>
     <button class="btn" id="bManual">${ICO.pen}<span><span class="t">Cargar a mano</span><span class="d">Escribe el número y los productos.</span></span></button>
-    <button class="btn" id="bEjemplo">${ICO.play}<span><span class="t">Probar con la factura de ejemplo</span><span class="d">Los 6 amplificadores EVO de la factura 10095.</span></span></button>
   </div>
-  ${bloqueWhatsApp()}
-  ${enCurso.length ? `<h2>Despachos sin terminar</h2><ul class="hist">${enCurso.map(histRow).join("")}</ul>` : ""}`;
+  ${enCurso.length ? `<h2>Sin terminar</h2><ul class="hist">${enCurso.map(histRow).join("")}</ul>` : ""}
+  <h2>Historial de salidas</h2>
+  <input class="in" id="hq" placeholder="Buscar por factura o cliente" value="${esc(S.hq)}" autocomplete="off">
+  ${list.length ? `<ul class="hist">${list.map(histRow).join("")}</ul>` : `<p class="muted" style="margin-top:12px">${q ? "Nada coincide. Escribe el número completo y presiona Enter para buscar en todo el historial." : "Aún no hay salidas registradas."}</p>`}`;
 }
-
-const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-const instalada = () => window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
-let installEvt = null;
-function bloqueWhatsApp(){
-  if (esIOS) return `<h2>Facturas por WhatsApp</h2><p class="muted small">En iPhone: abre el PDF en WhatsApp, toca Compartir y elige "Guardar en Archivos". Luego usa "Abrir PDF de la factura" y búscalo en Archivos.</p>`;
-  if (instalada()) return `<h2>Facturas por WhatsApp</h2><p class="muted small">En el chat de WhatsApp, mantén presionado el PDF de la factura, toca Compartir y elige "Despacho". La factura se abre aquí lista para revisar.</p>`;
-  return `<h2>Facturas por WhatsApp</h2>
-    <p class="muted small">Instala la app en el teléfono y podrás mandarle el PDF directo desde WhatsApp con el botón Compartir.</p>
-    ${installEvt ? `<button class="btn" id="bInstalar">Instalar la app en este teléfono</button>` : `<p class="muted small">Para instalarla: abre el menú de Chrome (los tres puntos) y toca "Instalar aplicación" o "Agregar a la pantalla principal".</p>`}`;
+function abrirRevision(f){
+  S.draft = Object.assign({numero: "", cliente: "", rif: "", vendedor: "", fecha: "", origen: "manual"}, f);
+  S.draft.items = (f.items || []).map(it => Object.assign({}, it, {tipo: tipoDe(S.prod[productoDe(it.codigo)]) || adivinarTipo(it.descripcion), nuevo: !productoDe(it.codigo)}));
+  S.draft.items.forEach(it => { if (it.nuevo) it.tipo = adivinarTipo(it.descripcion); });
+  S.msg = null; go("revisar");
 }
-
 function vRevisar(){
   const d = S.draft;
   return `
   <h1>Revisar factura</h1>
-  <p class="muted">${d.origen === "pdf" ? "Leído del PDF. " : d.origen === "foto" ? "Leído de la foto: compáralo con la factura en papel. " : ""}Corrige lo que haga falta antes de empezar.</p>
+  <p class="muted">${d.origen === "foto" ? "Leído de la foto: compáralo con la factura en papel. " : d.origen === "pdf" ? "Leído del PDF. " : ""}Corrige lo que haga falta antes de empezar.</p>
   ${msgBox()}
   ${d.foto ? `<details class="panel" open style="margin-bottom:12px"><summary style="font-weight:600;cursor:pointer">Foto de la factura</summary><img src="${d.foto}" alt="Foto de la factura" style="display:block;width:100%;margin-top:10px;border-radius:8px"></details>` : ""}
-  ${d.items.some(i => i.nota) ? `<div class="note" style="margin-bottom:12px">Hay ${d.items.filter(i => i.nota).length} renglones marcados para revisar.</div>` : ""}
   <div class="panel stack">
     <div class="grid2">
       <div><label class="f" for="rNum">Número de factura</label><input class="in" id="rNum" value="${esc(d.numero)}"></div>
-      <div><label class="f" for="rDes">Despachador</label><input class="in" id="rDes" value="${esc(d.despachador)}" placeholder="Tu nombre"></div>
+      <div><label class="f" for="rCli">Cliente</label><input class="in" id="rCli" value="${esc(d.cliente)}"></div>
     </div>
-    <div><label class="f" for="rCli">Cliente</label><input class="in" id="rCli" value="${esc(d.cliente)}"></div>
-    <label class="check"><input type="checkbox" id="rSer" ${d.pedirSerial ? "checked" : ""}> Pedir el serial de cada unidad</label>
   </div>
   <h2>Productos (${d.items.length})</h2>
-  <div class="panel">
-    <table class="edit-items"><tbody>
-      ${d.items.map((it, i) => `<tr>
-        <td><input data-i="${i}" data-k="codigo" value="${esc(it.codigo)}" aria-label="Código" placeholder="Código"><div class="small muted" style="margin-top:2px">${esc(it.descripcion)}</div>${it.nota ? `<div class="small" style="margin-top:2px;color:var(--warn);font-weight:600">${esc(it.nota)}</div>` : ""}</td>
-        <td class="q"><input data-i="${i}" data-k="cantidad" value="${it.cantidad}" inputmode="numeric" aria-label="Cantidad"></td>
-        <td class="x"><button class="iconbtn" data-del="${i}" aria-label="Quitar renglón">×</button></td>
-      </tr>`).join("")}
-    </tbody></table>
-    <button class="btn sm" id="rAdd" style="margin-top:8px">Agregar renglón</button>
-  </div>
+  ${lineasEditables(d.items, "r")}
   <div class="stack" style="margin-top:16px">
     <button class="btn primary" id="rGo">Empezar despacho</button>
     <button class="btn" id="rCancel">Cancelar</button>
   </div>`;
 }
-
-function meter(hechos, cantidad){
-  const segs = Math.min(cantidad, 20), on = Math.round(hechos / cantidad * segs);
-  return `<div class="meter" aria-hidden="true">${Array.from({length: segs}, (_, k) => `<i class="${k < on ? "on" : ""}"></i>`).join("")}</div>`;
+function lineasEditables(items, g, conProducto){
+  return `<div class="panel"><table class="edit-items"><tbody>
+    ${items.map((it, i) => `<tr>
+      <td>
+        <input data-i="${i}" data-k="codigo" data-g="${g}" value="${esc(it.codigo)}" aria-label="Código" placeholder="Código">
+        ${conProducto ? `<input data-i="${i}" data-k="producto" data-g="${g}" value="${esc(it.producto || "")}" list="dlProd" placeholder="Código en Saint" aria-label="Código en Saint" style="margin-top:4px">` : ""}
+        <div class="small muted" style="margin-top:2px">${esc(it.descripcion)}</div>
+        ${it.nota ? `<div class="small" style="margin-top:2px;color:var(--warn);font-weight:600">${esc(it.nota)}</div>` : ""}
+        ${it.nuevo ? selectorTipo(i, it.tipo, g) : `<div class="small muted">${esc(TIPOS[it.tipo] || "")}</div>`}
+      </td>
+      <td class="q"><input data-i="${i}" data-k="cantidad" data-g="${g}" value="${fnum(it.cantidad)}" inputmode="decimal" aria-label="Cantidad"></td>
+      <td class="x"><button class="iconbtn" data-del="${i}" data-g="${g}" aria-label="Quitar renglón">×</button></td>
+    </tr>`).join("")}
+  </tbody></table>
+  <button class="btn sm" data-add="${g}" style="margin-top:8px">Agregar renglón</button></div>
+  ${conProducto ? `<datalist id="dlProd">${Object.values(S.prod).slice(0, 3000).map(p => `<option value="${esc(p.codigo)}">${esc(p.descripcion)}</option>`).join("")}</datalist>` : ""}`;
 }
-const serialList = arr => { const s = (arr || []).filter(Boolean); return s.length ? `<div class="serials">Seriales: ${s.map(x => `<b>${esc(x)}</b>`).join(", ")}</div>` : ""; };
+function syncLineas(items, g){
+  $$(`[data-k][data-g="${g}"]`).forEach(inp => {
+    const it = items[+inp.dataset.i]; if (!it) return;
+    if (inp.dataset.k === "cantidad") it.cantidad = Math.max(0, n2(num(inp.value)));
+    else {
+      it[inp.dataset.k] = norm(inp.value);
+      if (inp.dataset.k === (g === "i" ? "producto" : "codigo")){ const p = productoDe(inp.value); it.nuevo = !p; if (p) it.tipo = tipoDe(S.prod[p]); }
+    }
+  });
+  $$(`[data-tipo][data-g="${g}"]`).forEach(s => { const it = items[+s.dataset.tipo]; if (it) it.tipo = s.value; });
+}
+function bindLineas(items, g){
+  $$(`[data-del][data-g="${g}"]`).forEach(b => b.onclick = () => { syncLineas(items, g); items.splice(+b.dataset.del, 1); render(); });
+  const add = $(`[data-add="${g}"]`);
+  if (add) add.onclick = () => { syncLineas(items, g); items.push({codigo: "", producto: "", descripcion: "", cantidad: 1, tipo: "serial", nuevo: true}); render(); const ins = $$(`[data-k="codigo"][data-g="${g}"]`); if (ins.length) ins[ins.length - 1].focus(); };
+}
 
+async function empezarDespacho(){
+  const d = S.draft;
+  syncLineas(d.items, "r");
+  d.numero = $("#rNum").value.trim(); d.cliente = $("#rCli").value.trim();
+  d.items = d.items.filter(i => i.codigo && i.cantidad > 0);
+  if (!d.numero){ S.msg = {kind: "bad", text: "Falta el número de factura."}; return render(); }
+  if (!d.items.length){ S.msg = {kind: "bad", text: "Agrega al menos un producto con cantidad."}; return render(); }
+  const m = {}; d.items.forEach(i => { const k = productoDe(i.codigo) || i.codigo; if (m[k]) m[k].cantidad = n2(m[k].cantidad + i.cantidad); else m[k] = Object.assign({}, i, {codigo: k}); }); d.items = Object.values(m);
+  S.msg = {kind: "busy", text: "Verificando la factura…"}; render();
+  try {
+    const prev = await DB.one("despachos", "numero", d.numero);
+    if (prev && prev.estado === "despachada"){ beep("bad"); S.msg = {kind: "bad", text: `La factura ${prev.numero} ya fue despachada por ${(prev.datos && prev.datos.despachador) || "otro usuario"} el ${fmt(prev.fin)}. No se puede despachar dos veces.`}; return render(); }
+    if (prev){ S.msg = null; return abrirDespacho(prev); }
+    await asegurarProductos(d.items.map(i => ({codigo: i.codigo, descripcion: i.descripcion, tipo: i.tipo})));
+    const nuevo = {numero: d.numero, cliente: d.cliente, rif: d.rif, estado: "en_proceso",
+      datos: {vendedor: d.vendedor, fecha: d.fecha, despachador: nombreUsuario(), pila: [],
+        items: d.items.map(i => ({codigo: i.codigo, descripcion: (S.prod[i.codigo] && S.prod[i.codigo].descripcion) || i.descripcion || "", cantidad: i.cantidad, hechos: 0, seriales: [], cortes: [], tipo: tipoDe(S.prod[i.codigo])}))}};
+    await DB.insert("despachos", nuevo);
+    S.msg = null; abrirDespacho(nuevo);
+  } catch(e){ S.msg = {kind: "bad", text: errMsg(e)}; render(); }
+}
+function abrirDespacho(row){
+  S.cur = {numero: row.numero, cliente: row.cliente, rif: row.rif, estado: row.estado, fin: row.fin, datos: clone(row.datos || {})};
+  S.cur.datos.items = S.cur.datos.items || []; S.cur.datos.pila = S.cur.datos.pila || [];
+  S.cur.datos.items.forEach(i => { i.seriales = i.seriales || []; i.cortes = i.cortes || []; i.tipo = i.tipo || "serial"; i.hechos = i.hechos || 0; });
+  S.espera = null; S.draft = null; S.ultimo = null;
+  go("despacho");
+  const pend = S.cur.datos.items.filter(i => !completa(i)).length;
+  setStatus("", pend ? "Escanea el primer producto." : "Todo verificado. Cierra el despacho.", pend ? `${pend} renglones pendientes.` : "");
+}
+function guardarDespacho(){
+  const d = S.cur;
+  const row = {numero: d.numero, cliente: d.cliente, rif: d.rif, estado: d.estado, fin: d.fin || null, datos: clone(d.datos), actualizado: now()};
+  return enqueue(() => DB.upsert("despachos", row, {onConflict: "numero"}));
+}
 function vDespacho(){
-  const d = S.cur, tot = totalUnits(d), hech = doneUnits(d), completo = hech === tot;
+  const d = S.cur, items = d.datos.items, completo = items.every(completa);
+  const hech = items.filter(completa).length;
   return `
   <div class="hdr-fact">
     <div><h1>Factura ${esc(d.numero)}</h1><p class="muted" style="margin:0">${esc(d.cliente || "Sin cliente")}</p></div>
-    <div class="count">${hech}/${tot}<small>unidades</small></div>
+    <div class="count">${hech}/${items.length}<small>renglones listos</small></div>
   </div>
   <div class="row" style="margin-top:12px">
-    ${completo ? `<button class="btn ok" id="dClose">Cerrar despacho</button>` : `<button class="btn" id="dUndo" ${d.pila.length ? "" : "disabled"}>Deshacer último</button>`}
+    ${completo ? `<button class="btn ok" id="dClose">Cerrar despacho</button>` : `<button class="btn" id="dUndo" ${d.datos.pila.length ? "" : "disabled"}>Deshacer último</button>`}
     <button class="btn" id="dPause">Guardar y salir</button>
   </div>
   <ul class="items">
-    ${d.items.map((it, i) => `<li class="item ${it.hechos >= it.cantidad ? "done" : ""} ${S.ultimo === i ? "flash" : ""}">
-      <div class="item-top"><span class="code">${esc(it.codigo)}</span><span class="qty">${it.hechos}/${it.cantidad}</span></div>
+    ${items.map((it, i) => `<li class="item ${completa(it) ? "done" : ""} ${S.ultimo === i ? "flash" : ""}">
+      <div class="item-top"><span class="code">${esc(it.codigo)}</span><span class="qty">${qtyTxt(it.hechos, it.cantidad, it.tipo)}</span></div>
       <div class="desc">${esc(it.descripcion)}</div>
-      ${meter(it.hechos, it.cantidad)}${serialList(it.seriales)}
+      ${meter(it.hechos, it.cantidad)}${serialList(it.seriales)}${cortesList(it.cortes)}
+      <div class="meta">${esc(TIPOS[it.tipo])}</div>
     </li>`).join("")}
   </ul>`;
 }
-
 function vListo(){
   const d = S.cerrado;
   return `<div class="big-ok">${ICO.ok}
     <h1>Factura ${esc(d.numero)} despachada</h1>
-    <p class="muted">${totalUnits(d)} unidades verificadas por ${esc(d.despachador || "sin nombre")}, ${esc(fmt(d.fin))}.</p>
+    <p class="muted">Verificada por ${esc(d.datos.despachador || nombreUsuario())}, ${esc(fmt(d.fin))}.</p>
   </div>
   <button class="btn primary" id="lNew">Despachar otra factura</button>`;
 }
 
-/* ================= vistas: historial ================= */
-function histRow(d){
-  const ok = d.estado === "despachada", nDev = devsDe(d.numero).length;
-  return `<li><button data-open="${esc(d.numero)}">
-    <div class="grow"><div class="n">${esc(d.numero)}</div><div class="c">${esc(d.cliente || "Sin cliente")}</div></div>
-    <div style="text-align:right">
-      <span class="chip ${ok ? "ok" : "warn"}">${ok ? "Despachada" : `En curso ${doneUnits(d)}/${totalUnits(d)}`}</span>
-      ${nDev ? `<div style="margin-top:4px"><span class="chip dev">${nDev === 1 ? "1 devolución" : nDev + " devoluciones"}</span></div>` : ""}
-      <div class="small muted" style="margin-top:4px">${esc(fmt(d.fin || d.actualizado))}</div>
-    </div>
-  </button></li>`;
+function setStatus(kind, text, sub, acts){
+  const el = $("#status");
+  el.className = "status " + (kind || "");
+  el.innerHTML = esc(text) + (sub ? `<span class="sub">${esc(sub)}</span>` : "") + (acts ? `<div class="acts">${acts}</div>` : "");
+  const cm = $("#camMsg"); if (cm){ cm.className = "cam-msg " + (kind || ""); cm.textContent = text + (sub && kind === "bad" ? ". " + sub : ""); }
+  el.querySelectorAll("[data-act]").forEach(b => b.onclick = () => ACT[b.dataset.act]());
+}
+const bad = (t, sub, acts) => { beep("bad"); setStatus("bad", t, sub, acts); };
+const btnAct = (act, txt) => `<button class="btn sm" data-act="${act}">${esc(txt)}</button>`;
+
+async function scanDespacho(code){
+  const d = S.cur, items = d.datos.items;
+  if (S.espera && S.espera.tipo === "serial") return despacharSerial(S.espera.i, code);
+  if (S.espera && S.espera.tipo === "rollo") return usarRollo(S.espera.i, code);
+  const cod = productoDe(code);
+  if (cod){
+    const i = items.findIndex(it => canon(it.codigo) === canon(cod));
+    if (i < 0) return bad(`${cod} no está en esta factura`, "No entregues este producto.");
+    return lineaDespacho(i);
+  }
+  const u = await buscarUnidad(code); if (u === false) return;
+  if (u){
+    const i = items.findIndex(it => canon(it.codigo) === canon(u.producto));
+    if (i < 0) return bad(`${u.serial} es un ${u.producto}, que no está en esta factura`, "No entregues esta unidad.");
+    return items[i].tipo === "metro" ? usarRollo(i, u.serial, u) : despacharSerial(i, u.serial, u);
+  }
+  S.pendienteAlias = code;
+  bad(`${code} no está registrado`, "Si es el código de barras de la caja, asócialo al producto correcto. Si no, no entregues el producto.", btnAct("asociar", "Asociar a un producto") + btnAct("limpiar", "Ignorar"));
+}
+async function buscarUnidad(serial){
+  S.busy = true; setStatus("", `Buscando ${serial}…`);
+  try { return await DB.one("unidades", "serial", norm(serial)); }
+  catch(e){ bad("No se pudo consultar el inventario", errMsg(e)); return false; }
+  finally { S.busy = false; }
+}
+function lineaDespacho(i){
+  const it = S.cur.datos.items[i];
+  if (completa(it)) return bad(`Sobra: ya se completó ${it.codigo}`, "Devuelve este producto al depósito.");
+  if (it.tipo === "serial"){ S.espera = {tipo: "serial", i}; beep("warn"); return setStatus("warn", `Ahora escanea el serial de ${it.codigo}`, `Unidad ${it.hechos + 1} de ${fnum(it.cantidad)}.`, btnAct("cancelar", "Cancelar")); }
+  if (it.tipo === "metro"){ S.espera = {tipo: "rollo", i}; beep("warn"); return setStatus("warn", `Escanea la etiqueta del rollo de ${it.codigo}`, `Faltan ${fnum(it.cantidad - it.hechos)} m.`, btnAct("cancelar", "Cancelar")); }
+  agregarDespacho(i, {});
+  enqueue(() => DB.insert("movimientos", {tipo: "despacho", producto: it.codigo, cantidad: 1, documento: S.cur.numero}));
+}
+async function despacharSerial(i, serial, u){
+  const d = S.cur, it = d.datos.items[i]; serial = norm(serial);
+  if (productoDe(serial) && !u) return bad("Eso es un código de producto, no un serial", `Escanea el serial de la unidad de ${it.codigo}.`, btnAct("cancelar", "Cancelar"));
+  if (it.seriales.includes(serial)) return bad(`El serial ${serial} ya se escaneó en esta factura`, "Cada unidad tiene un serial distinto.", btnAct("cancelar", "Cancelar"));
+  if (u === undefined){ u = await buscarUnidad(serial); if (u === false) return; }
+  if (!u){
+    S.pendSerial = {i, serial};
+    if (S.prefs.transicion) return bad(`El serial ${serial} nunca ingresó al inventario`, "Si es mercancía que ya tenías antes de usar el sistema, regístrala ahora.", btnAct("regdesp", "Registrar y despachar") + btnAct("cancelar", "Cancelar"));
+    return bad(`El serial ${serial} no está en el inventario`, "Esta unidad no ingresó con ninguna compra. Apártala y revisa.", btnAct("cancelar", "Cancelar"));
+  }
+  if (canon(u.producto) !== canon(it.codigo)) return bad(`Ese serial es de ${u.producto}, no de ${it.codigo}`, "Revisa que sea la caja correcta.", btnAct("cancelar", "Cancelar"));
+  if (u.estado !== "deposito") return bad(u.estado === "despachada" ? `El serial ${serial} ya salió con la factura ${u.documento || "?"}` : `El serial ${serial} está en estado "${u.estado}"`, "No entregues esta unidad.", btnAct("cancelar", "Cancelar"));
+  S.busy = true; setStatus("", "Registrando salida…");
+  try {
+    await DB.rpc("cambiar_estado_unidad", {p_serial: serial, p_de: ["deposito"], p_a: "despachada", p_tipo: "despacho", p_documento: d.numero});
+    S.busy = false; agregarDespacho(i, {serial});
+  } catch(e){ S.busy = false; bad("No se pudo registrar la salida", errMsg(e), btnAct("cancelar", "Cancelar")); }
+}
+async function usarRollo(i, serial, u){
+  const d = S.cur, it = d.datos.items[i]; serial = norm(serial);
+  if (u === undefined){ u = await buscarUnidad(serial); if (u === false) return; }
+  if (!u) return bad(`${serial} no es un rollo registrado`, "Escanea la etiqueta QR del rollo que vas a cortar.", btnAct("cancelar", "Cancelar"));
+  if (canon(u.producto) !== canon(it.codigo)) return bad(`Ese rollo es de ${u.producto}, no de ${it.codigo}`, "", btnAct("cancelar", "Cancelar"));
+  if (u.metros_restantes == null) return bad(`${serial} no es un rollo de metros`, "", btnAct("cancelar", "Cancelar"));
+  if (!(u.metros_restantes > 0)) return bad(`El rollo ${serial} está agotado`, "Usa otro rollo.", btnAct("cancelar", "Cancelar"));
+  const pend = n2(it.cantidad - it.hechos), sug = Math.min(pend, u.metros_restantes);
+  beep("warn");
+  pedirNumero(`Rollo ${serial}`, `Le quedan ${fnum(u.metros_restantes)} m. Faltan ${fnum(pend)} m de ${it.codigo}. ¿Cuántos metros cortaste de este rollo?`, fnum(sug), async m => {
+    if (m > u.metros_restantes + 0.001) return bad(`El rollo solo tiene ${fnum(u.metros_restantes)} m`, "Completa con otro rollo.");
+    if (m > pend + 0.001) return bad(`Solo faltan ${fnum(pend)} m en esta factura`, "No cortes de más.");
+    S.busy = true; setStatus("", "Registrando corte…");
+    try {
+      const r = await DB.rpc("mover_metros", {p_serial: serial, p_delta: -m, p_tipo: "corte", p_documento: d.numero});
+      S.busy = false; agregarDespacho(i, {serial, metros: m});
+      const prod = S.prod[it.codigo];
+      if (r && prod && r.metros_restantes < (prod.metros_alerta || 10)) setStatus("warn", `Al rollo ${serial} le quedan ${fnum(r.metros_restantes)} m`, "Está por acabarse.");
+    } catch(e){ S.busy = false; bad("No se pudo registrar el corte", errMsg(e)); }
+  });
+}
+function agregarDespacho(i, x){
+  const d = S.cur, it = d.datos.items[i];
+  it.hechos = n2(it.hechos + (x.metros || 1));
+  if (x.metros) it.cortes.push({serial: x.serial, metros: x.metros});
+  else if (x.serial) it.seriales.push(x.serial);
+  d.datos.pila.push(Object.assign({i}, x));
+  S.espera = null; S.ultimo = i;
+  guardarDespacho(); beep("ok"); render(); S.ultimo = null;
+  const pend = d.datos.items.filter(z => !completa(z)).length;
+  if (!pend) setStatus("ok", "Todo verificado. Cierra el despacho.");
+  else setStatus("ok", `${it.codigo}: ${qtyTxt(it.hechos, it.cantidad, it.tipo)}`, (x.serial ? `${x.metros ? "Rollo" : "Serial"} ${x.serial}. ` : "") + `Faltan ${pend} renglones.`);
+}
+async function deshacerDespacho(){
+  const d = S.cur, p = d.datos.pila[d.datos.pila.length - 1]; if (!p || S.busy) return;
+  const it = d.datos.items[p.i];
+  S.busy = true; setStatus("", "Deshaciendo…");
+  try {
+    if (p.metros) await DB.rpc("mover_metros", {p_serial: p.serial, p_delta: p.metros, p_tipo: "anulacion", p_documento: d.numero, p_nota: "Deshacer corte"});
+    else if (p.serial) await DB.rpc("cambiar_estado_unidad", {p_serial: p.serial, p_de: ["despachada"], p_a: "deposito", p_tipo: "anulacion", p_documento: d.numero, p_nota: "Deshacer salida"});
+    else await DB.insert("movimientos", {tipo: "anulacion", producto: it.codigo, cantidad: -1, documento: d.numero});
+    d.datos.pila.pop();
+    it.hechos = n2(Math.max(0, it.hechos - (p.metros || 1)));
+    if (p.metros) it.cortes.pop(); else if (p.serial) it.seriales.splice(it.seriales.lastIndexOf(p.serial), 1);
+    S.busy = false; guardarDespacho(); render();
+    setStatus("", `Se deshizo una unidad de ${it.codigo}`, p.serial ? `${p.metros ? "Los metros volvieron al rollo" : "El serial volvió al depósito"} ${p.serial}.` : "");
+  } catch(e){ S.busy = false; bad("No se pudo deshacer", errMsg(e)); }
+}
+async function cerrarDespacho(){
+  const d = S.cur;
+  d.estado = "despachada"; d.fin = now();
+  await guardarDespacho();
+  S.cerrado = clone(d); S.cur = null; S.espera = null;
+  beep("ok"); go("listo"); cargarHistorial();
 }
 
-function vHistorial(){
-  const q = norm(S.hq);
-  const list = !q ? S.lista : S.lista.filter(d => norm(d.numero).includes(q) || norm(d.cliente).includes(q) || (d.seriales || []).some(s => norm(s).includes(q)) || d.items.some(i => norm(i.codigo).includes(q)));
-  return `
-  <h1>Historial</h1>
-  <p class="muted">Busca por factura, cliente, código o serial, por ejemplo para una garantía.</p>
-  <input class="in" id="hq" placeholder="Buscar…" value="${esc(S.hq)}" autocomplete="off">
-  ${list.length ? `<ul class="hist">${list.map(histRow).join("")}</ul>` : `<p class="muted" style="margin-top:14px">${q ? "Nada coincide con la búsqueda." : "Aún no hay despachos. Empieza uno en Despachar."}</p>`}`;
+/* ---- detalle de una salida ---- */
+async function abrirDetalle(numero){
+  S.detalle = numero; S.detalleData = null; go("detalle");
+  try {
+    const [d, devs] = await Promise.all([DB.one("despachos", "numero", numero), DB.q(sb.from("devoluciones").select("*").eq("numero_factura", numero).order("fecha", {ascending: false}))]);
+    S.detalleData = {d, devs: devs || []};
+  } catch(e){ S.detalleData = {error: errMsg(e)}; }
+  if (S.view === "detalle") render();
 }
-
 function vDetalle(){
-  const d = getDesp(S.detalle);
-  if (!d) return `<p class="muted">Este registro ya no existe.</p><button class="btn" data-back>Volver</button>`;
-  const ok = d.estado === "despachada", dv = devsDe(d.numero), devuelto = devueltoDe(d.numero);
+  const x = S.detalleData;
+  if (!x) return `<p class="muted"><span class="spin"></span> Cargando…</p>`;
+  if (x.error) return `<div class="note bad">${esc(x.error)}</div><button class="btn" data-back>Volver</button>`;
+  const d = x.d; if (!d) return `<p class="muted">Esta salida ya no existe.</p><button class="btn" data-back>Volver</button>`;
+  const ok = d.estado === "despachada", items = (d.datos && d.datos.items) || [];
   return `
   <h1>Factura ${esc(d.numero)}</h1>
-  <p class="muted">${esc(d.cliente || "Sin cliente")}${d.rif ? `, RIF ${esc(d.rif)}` : ""}</p>
-  <div class="note ${ok ? "ok" : ""}">${ok ? `Despachada por ${esc(d.despachador || "sin nombre")} el ${esc(fmt(d.fin))}.` : `En curso: ${doneUnits(d)} de ${totalUnits(d)} unidades verificadas.`}</div>
-  <ul class="items">${d.items.map(it => { const r = devuelto[norm(it.codigo)]; return `<li class="item ${it.hechos >= it.cantidad ? "done" : ""}">
-    <div class="item-top"><span class="code">${esc(it.codigo)}</span><span class="qty">${it.hechos}/${it.cantidad}</span></div>
-    <div class="desc">${esc(it.descripcion)}</div>
-    ${serialList(it.seriales)}
-    ${r ? `<div class="meta" style="color:var(--bad)">Devueltas: ${r.cant}${r.seriales.length ? ` (${r.seriales.map(esc).join(", ")})` : ""}</div>` : ""}
-  </li>`; }).join("")}</ul>
-  ${dv.length ? `<h2>Devoluciones de esta factura</h2><ul class="hist">${dv.map(devRow).join("")}</ul>` : ""}
+  <p class="muted">${esc(d.cliente || "Sin cliente")}</p>
+  <div class="note ${ok ? "ok" : ""}">${ok ? `Despachada por ${esc((d.datos && d.datos.despachador) || "?")} el ${esc(fmt(d.fin))}.` : "Despacho en curso."}</div>
+  <ul class="items">${items.map(it => `<li class="item ${completa(it) ? "done" : ""}">
+    <div class="item-top"><span class="code">${esc(it.codigo)}</span><span class="qty">${qtyTxt(it.hechos, it.cantidad, it.tipo)}</span></div>
+    <div class="desc">${esc(it.descripcion)}</div>${serialList(it.seriales)}${cortesList(it.cortes)}
+  </li>`).join("")}</ul>
+  ${x.devs.length ? `<h2>Devoluciones</h2><ul class="hist">${x.devs.map(devRow).join("")}</ul>` : ""}
   <div class="stack" style="margin-top:14px">
     ${!ok ? `<button class="btn primary" id="dtCont">Continuar despacho</button>` : `<button class="btn" id="dtDev">${ICO.back} Registrar una devolución</button>`}
-    <button class="btn danger" id="dtDel">Borrar este registro</button>
-    <button class="btn" data-back>Volver al historial</button>
+    ${esAdmin() ? `<button class="btn danger" id="dtDel">Borrar este registro</button>` : ""}
+    <button class="btn" data-back>Volver</button>
   </div>`;
 }
 
-/* ================= vistas: devoluciones ================= */
-const unidadesDev = dv => dv.items.reduce((a, i) => a + i.cantidad, 0);
-function devRow(dv){
-  return `<li><button data-dev="${esc(dv.id)}" class="devrow">
-    <div class="grow"><div class="n">${dv.numeroFactura ? "Factura " + esc(dv.numeroFactura) : "Sin factura"}</div><div class="c">${esc(dv.motivo)}${dv.cliente ? ", " + esc(dv.cliente) : ""}</div></div>
-    <div style="text-align:right"><span class="chip dev">${unidadesDev(dv)} ${unidadesDev(dv) === 1 ? "unidad" : "unidades"}</span><div class="small muted" style="margin-top:4px">${esc(fmt(dv.fecha))}</div></div>
+/* ================= INGRESO (compras) ================= */
+async function cargarIngresos(){
+  try {
+    S.ingLista = await DB.q(sb.from("ingresos").select("*").order("creado", {ascending: false}).limit(100));
+    S.proveedores = Array.from(new Set(S.ingLista.map(x => x.proveedor))).sort();
+    if (S.view === "ingreso") render();
+  } catch(e){ console.warn(e); }
+}
+function ingRow(g){
+  const items = g.items || [], rec = items.filter(i => i.recibidos >= i.cantidad - 0.001).length;
+  return `<li><button data-ing="${g.id}">
+    <div class="grow"><div class="n">${esc(g.numero_factura)}</div><div class="c">${esc(g.proveedor)}</div></div>
+    <div style="text-align:right"><span class="chip ${g.estado === "cerrado" ? "ok" : "warn"}">${g.estado === "cerrado" ? "Cerrado" : `Abierto ${rec}/${items.length}`}</span>
+    <div class="small muted" style="margin-top:4px">${esc(fmt(g.cerrado_en || g.creado))}</div></div>
   </button></li>`;
 }
+function vIngreso(){
+  const f = S.ingForm || (S.ingForm = {proveedor: "", numero: ""});
+  const abiertos = S.ingLista.filter(x => x.estado === "abierto");
+  return `
+  <h1>Ingreso de mercancía</h1>
+  <p class="muted">Registra la factura de compra y recibe cada caja con su serial.</p>
+  ${msgBox()}
+  ${S.pendFile && S.pendFile.para === "ingreso" ? `<div class="note ok">Archivo recibido: ${esc(S.pendFile.file.name || "factura")}. Escribe el proveedor y el número y toca "Usar el archivo recibido".</div>` : ""}
+  <div class="panel stack" style="margin-top:12px">
+    <div><label class="f" for="gProv">Proveedor</label><input class="in" id="gProv" list="dlProv" value="${esc(f.proveedor)}" placeholder="Nombre del proveedor" autocomplete="off">
+      <datalist id="dlProv">${S.proveedores.map(p => `<option value="${esc(p)}">`).join("")}</datalist></div>
+    <div><label class="f" for="gNum">Número de factura de compra</label><input class="in" id="gNum" value="${esc(f.numero)}" autocomplete="off"></div>
+  </div>
+  <div class="source" style="margin-top:12px">
+    ${S.pendFile && S.pendFile.para === "ingreso" ? `<button class="btn primary" id="gFile">${ICO.pdf}<span><span class="t">Usar el archivo recibido</span></span></button>` : ""}
+    <label class="btn ${S.pendFile ? "" : "primary"}">${ICO.cam}<span><span class="t">Foto de la factura de compra</span><span class="d">Se leen los productos para revisarlos.</span></span>
+      <input type="file" accept="image/*" capture="environment" id="gFoto" hidden></label>
+    <label class="btn">${ICO.pdf}<span><span class="t">Abrir PDF de la factura</span></span>
+      <input type="file" accept="application/pdf,.pdf" id="gPdf" hidden></label>
+    <button class="btn" id="gManual">${ICO.pen}<span><span class="t">Cargar a mano</span><span class="d">Para facturas que no se leen bien o sin factura.</span></span></button>
+  </div>
+  ${abiertos.length ? `<h2>Ingresos abiertos</h2><ul class="hist">${abiertos.map(ingRow).join("")}</ul>` : ""}
+  <h2>Últimos ingresos</h2>
+  ${S.ingLista.filter(x => x.estado === "cerrado").length ? `<ul class="hist">${S.ingLista.filter(x => x.estado === "cerrado").slice(0, 20).map(ingRow).join("")}</ul>` : `<p class="muted">Aún no hay ingresos cerrados.</p>`}`;
+}
+function leerFormIngreso(){
+  S.ingForm = {proveedor: $("#gProv").value.trim(), numero: $("#gNum").value.trim()};
+  if (!S.ingForm.proveedor || !S.ingForm.numero){ S.msg = {kind: "bad", text: "Escribe primero el proveedor y el número de la factura de compra."}; render(); return false; }
+  return true;
+}
+async function ingresoDesdeArchivo(file){
+  try {
+    const f = await leerArchivo(file);
+    abrirIngresoRevision(f.items, f);
+  } catch(e){ S.msg = {kind: "bad", text: e.message || "No se pudo leer el archivo."}; render(); }
+}
+async function abrirIngresoRevision(items, f){
+  let mapa = {};
+  try {
+    const rows = await DB.q(sb.from("proveedor_codigos").select("*").eq("proveedor", S.ingForm.proveedor));
+    rows.forEach(r => { mapa[canon(r.codigo_proveedor)] = r.producto; });
+  } catch(e){}
+  S.ingDraft = {origen: f ? f.origen : "manual", foto: f && f.foto,
+    items: (items.length ? items : [{codigo: "", descripcion: "", cantidad: 1}]).map(it => {
+      const p = mapa[canon(it.codigo)] || productoDe(it.codigo) || "";
+      return {codigo: it.codigo, producto: p, descripcion: (p && S.prod[p] && S.prod[p].descripcion) || it.descripcion, cantidad: it.cantidad, nota: p ? "" : it.nota,
+        tipo: p ? tipoDe(S.prod[p]) : adivinarTipo(it.descripcion), nuevo: !p};
+    })};
+  S.msg = null; go("ingresoRevisar");
+}
+function vIngresoRevisar(){
+  const d = S.ingDraft;
+  return `
+  <h1>Revisar compra</h1>
+  <p class="muted">${esc(S.ingForm.proveedor)}, factura ${esc(S.ingForm.numero)}. En cada renglón, el primer campo es el código del proveedor y el segundo el código en Saint. Si el producto no existe en el catálogo, se crea con el tipo que elijas.</p>
+  ${msgBox()}
+  ${d.foto ? `<details class="panel" open style="margin-bottom:12px"><summary style="font-weight:600;cursor:pointer">Foto de la factura</summary><img src="${d.foto}" alt="Foto de la factura" style="display:block;width:100%;margin-top:10px;border-radius:8px"></details>` : ""}
+  <h2>Productos (${d.items.length})</h2>
+  ${lineasEditables(d.items, "i", true)}
+  <div class="stack" style="margin-top:16px">
+    <button class="btn primary" id="giGo">Empezar a recibir</button>
+    <button class="btn" id="giCancel">Cancelar</button>
+  </div>`;
+}
+async function empezarIngreso(){
+  const d = S.ingDraft;
+  syncLineas(d.items, "i");
+  d.items.forEach(i => { if (!i.producto) i.producto = i.codigo; i.producto = productoDe(i.producto) || norm(i.producto); });
+  d.items = d.items.filter(i => i.producto && i.cantidad > 0);
+  if (!d.items.length){ S.msg = {kind: "bad", text: "Agrega al menos un producto con cantidad."}; return render(); }
+  S.msg = {kind: "busy", text: "Creando el ingreso…"}; render();
+  try {
+    const prev = await DB.q(sb.from("ingresos").select("*").eq("proveedor", S.ingForm.proveedor).eq("numero_factura", S.ingForm.numero).maybeSingle());
+    if (prev && prev.estado === "cerrado"){ S.msg = {kind: "bad", text: `La factura ${prev.numero_factura} de ${prev.proveedor} ya fue ingresada el ${fmt(prev.cerrado_en)}.`}; return render(); }
+    if (prev){ S.msg = null; return abrirIngreso(prev); }
+    await asegurarProductos(d.items.map(i => ({producto: i.producto, descripcion: i.descripcion, tipo: i.tipo})));
+    const eq = d.items.filter(i => i.codigo && canon(i.codigo) !== canon(i.producto)).map(i => ({proveedor: S.ingForm.proveedor, codigo_proveedor: i.codigo, producto: S.prod[i.producto] ? i.producto : norm(i.producto)}));
+    if (eq.length) await DB.upsert("proveedor_codigos", eq, {onConflict: "proveedor,codigo_proveedor"});
+    const lineas = {};
+    d.items.forEach(i => {
+      const k = norm(i.producto);
+      if (lineas[k]) lineas[k].cantidad = n2(lineas[k].cantidad + i.cantidad);
+      else lineas[k] = {producto: k, codigo_proveedor: i.codigo, descripcion: (S.prod[k] && S.prod[k].descripcion) || i.descripcion, cantidad: i.cantidad, recibidos: 0, seriales: [], rollos: [], tipo: tipoDe(S.prod[k])};
+    });
+    const r = await DB.q(sb.from("ingresos").insert({proveedor: S.ingForm.proveedor, numero_factura: S.ingForm.numero, items: Object.values(lineas)}).select().single());
+    S.msg = null; S.ingDraft = null; abrirIngreso(r);
+  } catch(e){ S.msg = {kind: "bad", text: errMsg(e)}; render(); }
+}
+async function abrirIngreso(row){
+  S.ing = clone(row); S.ing.pila = []; S.ing.etiquetarTodo = !!lsGet("etiquetarTodo", false); S.ing.fotos = [];
+  S.espera = null; go("ingresoRecibir");
+  setStatus("", "Escanea el código de la caja.", "Luego te pedirá su serial.");
+  cargarFotosIngreso();
+}
+async function cargarFotosIngreso(){
+  if (!S.ing) return;
+  try {
+    const rows = await DB.q(sb.from("fotos").select("*").eq("referencia_tipo", "ingreso").eq("referencia_id", String(S.ing.id)).order("creado"));
+    const urls = await Promise.all(rows.map(r => sb.storage.from("fotos").createSignedUrl(r.ruta, 3600).then(x => x.data && x.data.signedUrl).catch(() => null)));
+    S.ing.fotos = urls.filter(Boolean);
+    if (S.view === "ingresoRecibir") render();
+  } catch(e){ console.warn(e); }
+}
+const docIngreso = () => `Compra ${S.ing.proveedor} ${S.ing.numero_factura}`;
+function guardarIngreso(){
+  const g = S.ing, items = clone(g.items);
+  return enqueue(() => DB.update("ingresos", "id", g.id, {items}));
+}
+function vIngresoRecibir(){
+  const g = S.ing, items = g.items;
+  const listos = items.filter(i => i.recibidos >= i.cantidad - 0.001).length;
+  return `
+  <div class="hdr-fact">
+    <div><h1>Ingreso ${esc(g.numero_factura)}</h1><p class="muted" style="margin:0">${esc(g.proveedor)}</p></div>
+    <div class="count">${listos}/${items.length}<small>renglones listos</small></div>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn ok" id="giClose">Cerrar ingreso</button>
+    <button class="btn" id="giPause">Guardar y salir</button>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <label class="btn">${ICO.cam} Agregar foto<input type="file" accept="image/*" capture="environment" id="giFoto" hidden></label>
+    <button class="btn" id="giAddLine">Producto no listado</button>
+  </div>
+  <label class="check"><input type="checkbox" id="giEtqTodo" ${g.etiquetarTodo ? "checked" : ""}> Imprimir etiqueta también para cajas con serial de fábrica</label>
+  ${g.fotos.length ? `<div class="fotos">${g.fotos.map(u => `<img src="${esc(u)}" alt="Foto del ingreso">`).join("")}</div>` : ""}
+  <ul class="items">
+    ${items.map((it, i) => `<li class="item ${it.recibidos >= it.cantidad - 0.001 ? "done" : ""} ${S.ultimo === i ? "flash" : ""}">
+      <div class="item-top"><span class="code">${esc(it.producto)}</span><span class="qty">${qtyTxt(it.recibidos, it.cantidad, it.tipo)}</span></div>
+      <div class="desc">${esc(it.descripcion)}${it.codigo_proveedor && canon(it.codigo_proveedor) !== canon(it.producto) ? ` (proveedor: ${esc(it.codigo_proveedor)})` : ""}</div>
+      ${meter(it.recibidos, it.cantidad)}${serialList(it.seriales)}${(it.rollos || []).length ? `<div class="serials">Rollos: ${it.rollos.map(r => `<b>${esc(r.serial)}</b> ${fnum(r.metros)} m`).join(", ")}</div>` : ""}
+      <div class="acts">
+        ${it.tipo === "serial" ? `<button class="btn sm" data-gen="${i}">Sin serial: generar uno</button>` : ""}
+        ${it.tipo === "metro" ? `<button class="btn sm" data-rollo="${i}">Registrar rollo</button>` : ""}
+        ${it.tipo === "sinserial" ? `<button class="btn sm" data-cant="${i}">Sumar cantidad</button>` : ""}
+        <button class="btn sm" data-etqp="${i}">Crear etiqueta del producto</button>
+      </div>
+    </li>`).join("")}
+  </ul>`;
+}
+async function scanIngreso(code){
+  const g = S.ing;
+  if (S.espera && S.espera.tipo === "serial") return registrarSerialIngreso(S.espera.i, code, "fabricante");
+  let cod = productoDe(code);
+  if (!cod){ const l = g.items.find(it => canon(it.codigo_proveedor) === canon(code)); if (l) cod = l.producto; }
+  if (!cod){
+    S.pendienteAlias = code;
+    return bad(`${code} no está registrado`, "Si es el código de barras de la caja, asócialo al producto que corresponde.", btnAct("asociar", "Asociar a un producto") + btnAct("limpiar", "Ignorar"));
+  }
+  const i = g.items.findIndex(it => canon(it.producto) === canon(cod));
+  if (i < 0){ S.pendSobrante = cod; return bad(`${cod} no está en esta factura de compra`, "Puede ser un envío de más o un error del proveedor.", btnAct("sobrante", "Recibirlo como sobrante") + btnAct("limpiar", "Ignorar")); }
+  lineaIngreso(i);
+}
+function lineaIngreso(i){
+  const it = S.ing.items[i];
+  const extra = it.recibidos >= it.cantidad - 0.001 ? " Ojo: ya se completó la cantidad de la factura; será un sobrante." : "";
+  if (it.tipo === "serial"){ S.espera = {tipo: "serial", i}; beep("warn"); return setStatus("warn", `Escanea el serial de ${it.producto}`, `Unidad ${it.recibidos + 1} de ${fnum(it.cantidad)}.${extra}`, btnAct("generar", "No tiene serial: generar") + btnAct("cancelar", "Cancelar")); }
+  if (it.tipo === "metro") return registrarRollo(i);
+  sumarIngreso(i, 1);
+}
+async function registrarSerialIngreso(i, serial, origen){
+  const g = S.ing, it = g.items[i]; serial = norm(serial);
+  if (origen === "fabricante" && productoDe(serial)) return bad("Eso es un código de producto, no un serial", `Escanea el serial de la caja de ${it.producto}, o genera uno.`, btnAct("generar", "No tiene serial: generar") + btnAct("cancelar", "Cancelar"));
+  S.busy = true; setStatus("", "Registrando…");
+  try {
+    await DB.rpc("registrar_unidad", {p_serial: serial, p_producto: it.producto, p_origen: origen, p_ingreso: g.id, p_metros: null, p_documento: docIngreso()});
+    if (origen === "interno" || g.etiquetarTodo) await nuevaEtiqueta({serial, producto: it.producto, descripcion: it.descripcion, tipo: "unidad"});
+    S.busy = false;
+    it.recibidos = n2(it.recibidos + 1); it.seriales.push(serial);
+    g.pila.push({i, serial}); S.espera = null; S.ultimo = i;
+    guardarIngreso(); beep("ok"); render(); S.ultimo = null;
+    setStatus("ok", `${it.producto}: ${qtyTxt(it.recibidos, it.cantidad, it.tipo)}`, `Serial ${serial} registrado${origen === "interno" || g.etiquetarTodo ? " y enviado a imprimir" : ""}.`, btnAct("deshacer", "Deshacer"));
+  } catch(e){ S.busy = false; bad("No se pudo registrar", errMsg(e), btnAct("cancelar", "Cancelar")); }
+}
+async function generarSerialIngreso(i){
+  S.busy = true; setStatus("", "Generando serial…");
+  try { const s = await DB.rpc("generar_serial", {}); S.busy = false; await registrarSerialIngreso(i, s, "interno"); }
+  catch(e){ S.busy = false; bad("No se pudo generar el serial", errMsg(e)); }
+}
+function registrarRollo(i){
+  const it = S.ing.items[i], falta = n2(it.cantidad - it.recibidos);
+  pedirNumero(`Nuevo rollo de ${it.producto}`, "¿Cuántos metros tiene este rollo? Se le crea una etiqueta con QR.", fnum(falta > 0 ? falta : 100), async m => {
+    S.busy = true; setStatus("", "Registrando rollo…");
+    try {
+      const s = await DB.rpc("generar_serial", {});
+      await DB.rpc("registrar_unidad", {p_serial: s, p_producto: it.producto, p_origen: "interno", p_ingreso: S.ing.id, p_metros: m, p_documento: docIngreso()});
+      await nuevaEtiqueta({serial: s, producto: it.producto, descripcion: it.descripcion, tipo: "rollo", metros: m});
+      S.busy = false;
+      it.recibidos = n2(it.recibidos + m); it.rollos = it.rollos || []; it.rollos.push({serial: s, metros: m});
+      S.ing.pila.push({i, serial: s, metros: m}); S.ultimo = i;
+      guardarIngreso(); beep("ok"); render(); S.ultimo = null;
+      setStatus("ok", `Rollo ${s} de ${fnum(m)} m registrado`, "Su etiqueta ya está en la cola de impresión.", btnAct("deshacer", "Deshacer"));
+    } catch(e){ S.busy = false; bad("No se pudo registrar el rollo", errMsg(e)); }
+  });
+}
+function sumarIngreso(i, n){
+  const g = S.ing, it = g.items[i];
+  it.recibidos = n2(it.recibidos + n); g.pila.push({i, cantidad: n}); S.ultimo = i;
+  enqueue(() => DB.insert("movimientos", {tipo: "ingreso", producto: it.producto, cantidad: n, documento: docIngreso()}));
+  guardarIngreso(); beep("ok"); render(); S.ultimo = null;
+  setStatus("ok", `${it.producto}: ${qtyTxt(it.recibidos, it.cantidad, it.tipo)}`, "", btnAct("deshacer", "Deshacer"));
+}
+async function deshacerIngreso(){
+  const g = S.ing, p = g.pila[g.pila.length - 1]; if (!p || S.busy) return;
+  const it = g.items[p.i];
+  S.busy = true;
+  try {
+    if (p.serial){
+      await DB.rpc("cambiar_estado_unidad", {p_serial: p.serial, p_de: ["deposito"], p_a: "baja", p_tipo: "anulacion", p_documento: docIngreso(), p_nota: "Registrado por error en el ingreso"});
+      await DB.q(sb.from("etiquetas").update({impresa: true}).eq("serial", p.serial).eq("impresa", false));
+      contarEtiquetas();
+    } else await DB.insert("movimientos", {tipo: "anulacion", producto: it.producto, cantidad: -p.cantidad, documento: docIngreso()});
+    g.pila.pop();
+    it.recibidos = n2(Math.max(0, it.recibidos - (p.metros || p.cantidad || 1)));
+    if (p.metros) it.rollos.pop(); else if (p.serial) it.seriales.splice(it.seriales.lastIndexOf(p.serial), 1);
+    S.busy = false; guardarIngreso(); render();
+    setStatus("", `Se deshizo el último registro de ${it.producto}`, p.serial ? `${p.serial} quedó anulado.` : "");
+  } catch(e){ S.busy = false; bad("No se pudo deshacer", errMsg(e)); }
+}
+function cerrarIngreso(){
+  const g = S.ing;
+  const falt = g.items.filter(i => i.recibidos < i.cantidad - 0.001), sobr = g.items.filter(i => i.recibidos > i.cantidad + 0.001);
+  sheet(`<h2 style="margin-top:0">Cerrar ingreso ${esc(g.numero_factura)}</h2>
+    ${!falt.length && !sobr.length ? `<div class="note ok">Todo cuadra con la factura de compra.</div>` : ""}
+    ${falt.length ? `<div class="note bad"><b>Faltantes:</b><br>${falt.map(i => `${esc(i.producto)}: llegaron ${fnum(i.recibidos)} de ${fnum(i.cantidad)}${i.tipo === "metro" ? " m" : ""}`).join("<br>")}</div>` : ""}
+    ${sobr.length ? `<div class="note" style="margin-top:8px"><b>Sobrantes:</b><br>${sobr.map(i => `${esc(i.producto)}: llegaron ${fnum(i.recibidos)}, la factura dice ${fnum(i.cantidad)}`).join("<br>")}</div>` : ""}
+    <label class="f" for="giNota" style="margin-top:12px">Nota (opcional)</label><input class="in" id="giNota" placeholder="Ej. caja golpeada, se reclamó al proveedor">
+    <div class="row" style="margin-top:12px"><button class="btn ok" id="giOk">Cerrar ingreso</button><button class="btn" id="giNo">Volver</button></div>`, () => {
+    $("#giNo").onclick = cerrarSheet;
+    $("#giOk").onclick = async () => {
+      const nota = $("#giNota").value.trim();
+      cerrarSheet();
+      try {
+        await cola;
+        await DB.update("ingresos", "id", g.id, {items: clone(g.items), estado: "cerrado", cerrado_en: now(), nota: nota || null});
+        S.ingCerrado = {g: clone(g), falt: falt.length, sobr: sobr.length}; S.ing = null; S.espera = null; S.ingForm = null;
+        beep("ok"); go("ingresoListo"); cargarIngresos();
+      } catch(e){ bad("No se pudo cerrar", errMsg(e)); }
+    };
+  });
+}
+function vIngresoListo(){
+  const x = S.ingCerrado;
+  return `<div class="big-ok">${ICO.ok}<h1>Ingreso cerrado</h1>
+    <p class="muted">${esc(x.g.proveedor)}, factura ${esc(x.g.numero_factura)}.${x.falt ? ` ${x.falt} renglones con faltantes.` : ""}${x.sobr ? ` ${x.sobr} con sobrantes.` : ""}</p></div>
+    <button class="btn primary" id="glEtq">Ver etiquetas por imprimir</button>
+    <button class="btn" id="glNew" style="margin-top:10px">Registrar otro ingreso</button>`;
+}
+async function subirFoto(file, tipo, id){
+  const cv = await prepararImagen(file, 1400, false);
+  const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", 0.72));
+  const ruta = `${tipo}/${id}/${Date.now()}.jpg`;
+  const up = await sb.storage.from("fotos").upload(ruta, blob, {contentType: "image/jpeg"});
+  if (up.error) throw up.error;
+  await DB.insert("fotos", {ruta, referencia_tipo: tipo, referencia_id: String(id)});
+}
 
+/* ================= DEVOLUCIONES ================= */
+const unidadesDev = dv => ((dv.datos && dv.datos.items) || []).reduce((a, i) => a + (i.tipo === "metro" ? 1 : i.cantidad), 0);
+function devRow(dv){
+  return `<li><button data-dev="${esc(dv.id)}" class="devrow">
+    <div class="grow"><div class="n">${dv.numero_factura ? "Factura " + esc(dv.numero_factura) : "Sin factura"}</div><div class="c">${esc(dv.motivo)}${dv.cliente ? ", " + esc(dv.cliente) : ""}</div></div>
+    <div style="text-align:right"><span class="chip dev">${(dv.datos && dv.datos.items || []).length} prod.</span><div class="small muted" style="margin-top:4px">${esc(fmt(dv.fecha))}</div></div>
+  </button></li>`;
+}
 function vDevs(){
-  const q = norm(S.dq);
-  const list = !q ? S.devs : S.devs.filter(dv => norm(dv.numeroFactura).includes(q) || norm(dv.cliente).includes(q) || norm(dv.motivo).includes(q) || dv.items.some(i => norm(i.codigo).includes(q) || (i.seriales || []).some(s => norm(s).includes(q))));
   return `
   <h1>Devoluciones</h1>
   <p class="muted">Registra lo que el cliente trae de vuelta y verifica que salió con esa factura.</p>
   ${msgBox()}
   <button class="btn primary" id="dvNew" style="margin-top:10px">${ICO.back} Nueva devolución</button>
-  ${S.devs.length ? `<input class="in" id="dq" placeholder="Buscar por factura, cliente, código o serial" value="${esc(S.dq)}" autocomplete="off" style="margin-top:14px">` : ""}
-  ${list.length ? `<ul class="hist">${list.map(devRow).join("")}</ul>` : `<p class="muted" style="margin-top:14px">${q ? "Nada coincide con la búsqueda." : "Aún no hay devoluciones registradas."}</p>`}`;
+  <h2>Recientes</h2>
+  ${S.devLista && S.devLista.length ? `<ul class="hist">${S.devLista.map(devRow).join("")}</ul>` : `<p class="muted">${S.devLista ? "Aún no hay devoluciones." : "Cargando…"}</p>`}`;
 }
-
+async function cargarDevs(){
+  try { S.devLista = await DB.q(sb.from("devoluciones").select("*").order("fecha", {ascending: false}).limit(60)); } catch(e){ S.devLista = []; }
+  if (S.view === "devs") render();
+}
+function verDevolucion(id){
+  const dv = (S.devLista || []).concat((S.detalleData && S.detalleData.devs) || []).find(x => x.id === id); if (!dv) return;
+  sheet(`<h2 style="margin-top:0">Devolución${dv.numero_factura ? " de la factura " + esc(dv.numero_factura) : ""}</h2>
+    <p class="muted small">${esc(fmt(dv.fecha))}, recibió ${esc((dv.datos && dv.datos.usuario) || "?")}. Motivo: ${esc(dv.motivo)}${dv.nota ? ". " + esc(dv.nota) : ""}${dv.vinculada ? "" : ". Sin verificar contra la salida."}</p>
+    <ul class="items">${((dv.datos && dv.datos.items) || []).map(it => `<li class="item"><div class="item-top"><span class="code">${esc(it.codigo)}</span><span class="qty">${fnum(it.cantidad)}${it.tipo === "metro" ? " m" : ""}</span></div><div class="desc">${esc(it.descripcion || "")}</div>${serialList(it.seriales)}</li>`).join("")}</ul>
+    ${dv.datos && dv.datos.errores && dv.datos.errores.length ? `<div class="note bad">${dv.datos.errores.map(esc).join("<br>")}</div>` : ""}
+    <button class="btn" id="svClose" style="margin-top:10px">Cerrar</button>`, () => { $("#svClose").onclick = cerrarSheet; });
+}
 function vDevNueva(){
-  const recientes = S.lista.filter(d => d.estado === "despachada").slice(0, 8);
   return `
   <h1>Nueva devolución</h1>
   <p class="muted">Indica de qué factura viene la mercancía.</p>
@@ -678,137 +1243,246 @@ function vDevNueva(){
     <div><label class="f" for="nvNum">Número de factura</label>
       <div class="scanrow"><input class="in" id="nvNum" placeholder="Ej. 10095" autocomplete="off"><button class="btn primary" id="nvBuscar">Buscar</button></div></div>
   </div>
-  ${recientes.length ? `<h2>Despachadas recientemente</h2><ul class="hist">${recientes.map(d => `<li><button data-nvpick="${esc(d.numero)}"><div class="grow"><div class="n">${esc(d.numero)}</div><div class="c">${esc(d.cliente || "Sin cliente")}</div></div><div class="small muted">${esc(fmt(d.fin))}</div></button></li>`).join("")}</ul>` : ""}
-  <h2>La factura no está en el sistema</h2>
-  <p class="muted small">Para facturas despachadas antes de usar esta app. Los productos se registran sin verificar contra la salida.</p>
-  <button class="btn" id="nvLibre">Registrar devolución sin factura del sistema</button>
+  <h2>La factura no salió con el sistema</h2>
+  <p class="muted small">Para facturas despachadas antes de usar la app. Se registra sin verificar contra la salida.</p>
+  <button class="btn" id="nvLibre">Registrar sin factura del sistema</button>
   <button class="btn" id="nvCancel" style="margin-top:10px">Cancelar</button>`;
 }
-
+async function iniciarDevolucion(numero){
+  S.msg = {kind: "busy", text: "Buscando la factura…"}; render();
+  try {
+    const [d, prevs] = await Promise.all([DB.one("despachos", "numero", numero), DB.q(sb.from("devoluciones").select("datos").eq("numero_factura", numero))]);
+    if (!d){ S.msg = {kind: "bad", text: `La factura ${numero} no salió con el sistema. Puedes registrarla sin factura del sistema.`}; return render(); }
+    const prev = {};
+    (prevs || []).forEach(p => ((p.datos && p.datos.items) || []).forEach(it => {
+      const k = canon(it.codigo); prev[k] = prev[k] || {cant: 0, seriales: []};
+      prev[k].cant = n2(prev[k].cant + it.cantidad); (it.seriales || []).forEach(s => s && prev[k].seriales.push(s));
+    }));
+    const items = ((d.datos && d.datos.items) || []).filter(it => it.hechos > 0).map(it => {
+      const r = prev[canon(it.codigo)] || {cant: 0, seriales: []};
+      return {codigo: it.codigo, descripcion: it.descripcion, tipo: it.tipo, despachado: it.hechos, previo: r.cant,
+        disponibles: (it.seriales || []).filter(s => s && !r.seriales.includes(s)), ahora: 0, serialesAhora: [], metros: []};
+    });
+    if (!items.some(it => it.despachado - it.previo > 0.001)){ S.msg = {kind: "bad", text: `Todo lo de la factura ${numero} ya fue devuelto.`}; return render(); }
+    S.dev = {id: "DV-" + Date.now(), vinculada: true, numeroFactura: numero, cliente: d.cliente, motivo: "", nota: "", items, pila: []};
+    S.msg = null; S.espera = null; go("devolucion");
+    setStatus("", "Escanea el producto o el serial que devuelve el cliente.", "Solo se aceptan unidades que salieron con esta factura.");
+  } catch(e){ S.msg = {kind: "bad", text: errMsg(e)}; render(); }
+}
+function iniciarDevolucionLibre(numero){
+  S.dev = {id: "DV-" + Date.now(), vinculada: false, numeroFactura: numero || "", cliente: "", motivo: "", nota: "", items: [], pila: []};
+  S.msg = null; S.espera = null; go("devolucion");
+  setStatus("", "Escanea o escribe cada producto que devuelve el cliente.");
+}
 function vDevolucion(){
-  const dv = S.dev, tot = dv.items.reduce((a, i) => a + i.ahora, 0);
+  const dv = S.dev, tot = dv.items.filter(i => i.ahora > 0).length;
   const lineas = dv.vinculada ? dv.items : dv.items.filter(i => i.ahora > 0);
   return `
   <div class="hdr-fact">
-    <div><h1>Devolución</h1><p class="muted" style="margin:0">${dv.vinculada ? `Factura ${esc(dv.numeroFactura)}, ${esc(dv.cliente || "sin cliente")}` : (dv.numeroFactura ? `Factura ${esc(dv.numeroFactura)} (no registrada)` : "Sin factura del sistema")}</p></div>
-    <div class="count" style="color:var(--signal)">${tot}<small>por devolver</small></div>
+    <div><h1>Devolución</h1><p class="muted" style="margin:0">${dv.vinculada ? `Factura ${esc(dv.numeroFactura)}, ${esc(dv.cliente || "sin cliente")}` : (dv.numeroFactura ? `Factura ${esc(dv.numeroFactura)} (fuera del sistema)` : "Sin factura del sistema")}</p></div>
+    <div class="count" style="color:var(--signal)">${tot}<small>productos</small></div>
   </div>
   <div class="panel stack" style="margin-top:12px">
     ${!dv.vinculada ? `<div><label class="f" for="dvNum">Número de factura (opcional)</label><input class="in" id="dvNum" value="${esc(dv.numeroFactura)}"></div>` : ""}
     <div><label class="f" for="dvMot">Motivo</label>
       <select class="in" id="dvMot"><option value="">Elige el motivo…</option>${MOTIVOS.map(m => `<option ${dv.motivo === m ? "selected" : ""}>${esc(m)}</option>`).join("")}</select></div>
     <div><label class="f" for="dvNota">Nota</label><input class="in" id="dvNota" value="${esc(dv.nota)}" placeholder="Ej. no enciende, caja golpeada"></div>
+    <p class="small muted" style="margin:0">Con motivo "Garantía o falla" las unidades quedan en estado garantía y no vuelven a la venta.</p>
   </div>
   <div class="row" style="margin-top:12px">
     <button class="btn primary" id="dvSave" ${tot ? "" : "disabled"}>Registrar devolución</button>
     <button class="btn" id="dvUndo" ${dv.pila.length ? "" : "disabled"}>Deshacer último</button>
   </div>
   ${lineas.length ? `<ul class="items">${lineas.map(it => {
-    const i = dv.items.indexOf(it);
-    const max = dv.vinculada ? it.despachado - it.previo : null;
+    const i = dv.items.indexOf(it), max = dv.vinculada ? n2(it.despachado - it.previo) : null;
     return `<li class="item ${it.ahora ? "dev-on" : ""} ${S.ultimo === i ? "flash" : ""}">
-      <div class="item-top"><span class="code">${esc(it.codigo)}</span><span class="qty">${it.ahora}${max !== null ? "/" + max : ""}</span></div>
-      <div class="desc">${esc(it.descripcion)}</div>
-      ${dv.vinculada ? `<div class="meta">Salieron ${it.despachado}${it.previo ? `, ya devueltas antes ${it.previo}` : ""}${it.conSerial ? ", se verifica por serial" : ""}</div>` : ""}
+      <div class="item-top"><span class="code">${esc(it.codigo)}</span><span class="qty">${fnum(it.ahora)}${max !== null ? "/" + fnum(max) : ""}${it.tipo === "metro" ? " m" : ""}</span></div>
+      <div class="desc">${esc(it.descripcion || "")}</div>
+      ${dv.vinculada ? `<div class="meta">Salieron ${fnum(it.despachado)}${it.previo ? `, ya devueltas antes ${fnum(it.previo)}` : ""}</div>` : ""}
       ${serialList(it.serialesAhora)}
     </li>`; }).join("")}</ul>` : `<p class="muted" style="margin-top:14px">Escanea cada producto que devuelve el cliente.</p>`}
   <button class="btn" id="dvCancel" style="margin-top:12px">Cancelar devolución</button>`;
 }
-
-function vDevListo(){
-  const dv = S.devCerrada;
-  return `<div class="big-ok">${ICO.ok}
-    <h1>Devolución registrada</h1>
-    <p class="muted">${unidadesDev(dv)} ${unidadesDev(dv) === 1 ? "unidad" : "unidades"}${dv.numeroFactura ? " de la factura " + esc(dv.numeroFactura) : ""}, motivo: ${esc(dv.motivo)}.</p>
-  </div>
-  <button class="btn primary" id="dlNew">Registrar otra devolución</button>
-  <button class="btn" id="dlList" style="margin-top:10px">Ver devoluciones</button>`;
+async function scanDevolucion(code){
+  const dv = S.dev; code = norm(code);
+  if (!dv.vinculada){
+    let cod = productoDe(code), serial = null;
+    if (!cod){ const u = await buscarUnidad(code); if (u === false) return; if (u){ cod = u.producto; serial = u.serial; } }
+    cod = cod || code;
+    let i = dv.items.findIndex(it => canon(it.codigo) === canon(cod));
+    if (i < 0){ const p = S.prod[cod]; dv.items.push({codigo: cod, descripcion: p ? p.descripcion : "", tipo: p ? tipoDe(p) : "sinserial", ahora: 0, serialesAhora: [], metros: []}); i = dv.items.length - 1; }
+    if (dv.items[i].tipo === "metro") return pedirMetrosDev(i, null);
+    if (serial && dv.items[i].serialesAhora.includes(serial)) return bad(`El serial ${serial} ya está en esta devolución`);
+    return agregarDev(i, serial);
+  }
+  if (S.espera && S.espera.tipo === "serial"){
+    const it = dv.items[S.espera.i];
+    if (it.serialesAhora.includes(code)) return bad(`El serial ${code} ya está en esta devolución`, "", btnAct("cancelar", "Cancelar"));
+    if (!it.disponibles.includes(code)) return bad(`El serial ${code} no salió con la factura ${dv.numeroFactura}`, "No recibas esta unidad sin revisar de qué factura viene.", btnAct("cancelar", "Cancelar"));
+    return agregarDev(S.espera.i, code);
+  }
+  const porSerial = dv.items.findIndex(it => it.disponibles.includes(code) && !it.serialesAhora.includes(code));
+  if (porSerial >= 0) return agregarDev(porSerial, code);
+  if (dv.items.some(it => it.serialesAhora.includes(code))) return bad(`El serial ${code} ya está en esta devolución`);
+  const cod = productoDe(code);
+  const i = cod ? dv.items.findIndex(it => canon(it.codigo) === canon(cod)) : -1;
+  if (i < 0) return bad(`${code} no salió con la factura ${dv.numeroFactura}`, "No recibas este producto en esta devolución.");
+  const it = dv.items[i], max = n2(it.despachado - it.previo);
+  if (it.tipo === "metro") return pedirMetrosDev(i, max);
+  if (it.ahora >= max) return bad(`No se pueden devolver más unidades de ${it.codigo}`, `Salieron ${fnum(it.despachado)}${it.previo ? ` y ya se habían devuelto ${fnum(it.previo)}` : ""}.`);
+  if (it.tipo === "serial" && it.disponibles.length){ S.espera = {tipo: "serial", i}; beep("warn"); return setStatus("warn", `Ahora escanea el serial de ${it.codigo}`, "Debe ser uno de los que salieron con esta factura.", btnAct("cancelar", "Cancelar")); }
+  agregarDev(i, null);
 }
-
-function verDevolucion(id){
-  const dv = S.devs.find(x => x.id === id); if (!dv) return;
-  $("#sheet").innerHTML = `<h2 style="margin-top:0">Devolución${dv.numeroFactura ? " de la factura " + esc(dv.numeroFactura) : ""}</h2>
-    <p class="muted small">${esc(fmt(dv.fecha))}, recibió ${esc(dv.despachador || "sin nombre")}. Motivo: ${esc(dv.motivo)}${dv.nota ? ". " + esc(dv.nota) : ""}${dv.vinculada ? "" : ". Sin verificar contra la salida."}</p>
-    <ul class="items">${dv.items.map(it => `<li class="item"><div class="item-top"><span class="code">${esc(it.codigo)}</span><span class="qty">${it.cantidad}</span></div><div class="desc">${esc(it.descripcion)}</div>${serialList(it.seriales)}</li>`).join("")}</ul>
-    <button class="btn danger" id="svDel">Borrar esta devolución</button>
-    <button class="btn" id="svClose" style="margin-top:10px">Cerrar</button>`;
-  $("#modal").hidden = false;
-  $("#svClose").onclick = () => { $("#modal").hidden = true; };
-  const del = $("#svDel");
-  del.onclick = () => {
-    if (del.dataset.armed){ Store.removeDev(id); $("#modal").hidden = true; render(); return; }
-    del.dataset.armed = "1"; del.textContent = "Toca de nuevo para borrar";
-  };
+function pedirMetrosDev(i, max){
+  const it = S.dev.items[i];
+  const disp = max === null ? null : n2(max - it.ahora);
+  if (disp !== null && disp <= 0) return bad(`Ya se devolvieron todos los metros de ${it.codigo}`);
+  pedirNumero(`Devolución de ${it.codigo}`, `¿Cuántos metros devuelve el cliente?${disp !== null ? ` Máximo ${fnum(disp)} m.` : ""} Si el cable vuelve a un rollo, escanea o escribe la etiqueta del rollo; si es un retazo, deja el campo vacío.`, disp !== null ? fnum(disp) : "",
+    (m, sh) => {
+      const rollo = norm($("#shRollo") ? $("#shRollo").value : "");
+      if (disp !== null && m > disp + 0.001) return bad(`Solo se pueden devolver ${fnum(disp)} m`);
+      it.ahora = n2(it.ahora + m); it.metros.push({metros: m, rollo: rollo || null});
+      S.dev.pila.push({i, metros: m}); S.ultimo = i; beep("ok"); render(); S.ultimo = null;
+      setStatus("ok", `${it.codigo}: ${fnum(it.ahora)} m a devolver`, rollo ? `Volverán al rollo ${rollo}.` : "Se registran como retazo.");
+    }, `<input class="in" id="shRollo" placeholder="Etiqueta del rollo (opcional)" style="margin-top:8px" autocomplete="off">`);
 }
-
-/* ================= vistas: ajustes ================= */
-function vAjustes(){
-  const al = Object.entries(S.aliases);
-  return `
-  <h1>Ajustes</h1>
-  ${msgBox()}
-  <div class="panel stack" style="margin-top:12px">
-    <div><label class="f" for="aDes">Nombre del despachador en este teléfono</label><input class="in" id="aDes" value="${esc(S.prefs.despachador)}"></div>
-    <label class="check"><input type="checkbox" id="aSer" ${S.prefs.pedirSerial ? "checked" : ""}> Pedir serial por unidad en cada despacho nuevo</label>
-    <label class="check"><input type="checkbox" id="aSon" ${S.prefs.sonido ? "checked" : ""}> Sonido al escanear</label>
-  </div>
-  <h2>Catálogo de productos (${Object.keys(S.catalogo).length})</h2>
-  <p class="muted small">Con el catálogo, los códigos leídos de la foto se corrigen solos. Exporta desde Saint el listado de inventario a Excel e impórtalo aquí. También se aprende de cada factura que despachas.</p>
-  <div class="stack">
-    <label class="btn">Importar catálogo desde Excel o CSV<input type="file" accept=".xlsx,.xls,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" id="aCat" hidden></label>
-    ${Object.keys(S.catalogo).length ? `<button class="btn danger" id="aCatDel">Vaciar catálogo</button>` : ""}
-  </div>
-  <h2>Respaldo</h2>
-  <p class="muted small">Los datos se guardan solo en este teléfono y en este navegador. Exporta un respaldo con frecuencia.</p>
-  <div class="stack">
-    <button class="btn" id="aCsv">Exportar a Excel (CSV)</button>
-    <button class="btn" id="aJson">Exportar respaldo completo</button>
-    <label class="btn">Importar respaldo<input type="file" accept="application/json,.json" id="aImp" hidden></label>
-  </div>
-  <h2>Códigos asociados (${al.length})</h2>
-  <p class="muted small">Códigos de barras del fabricante vinculados a un código de Saint. Se crean al escanear una caja que la app aún no conoce.</p>
-  ${al.length ? `<div class="panel"><table class="edit-items"><tbody>${al.map(([k, v]) => `<tr><td><b>${esc(k)}</b><div class="small muted">${esc(v)}</div></td><td class="x"><button class="iconbtn" data-unalias="${esc(k)}" aria-label="Quitar asociación">×</button></td></tr>`).join("")}</tbody></table></div>` : `<p class="muted small">Todavía no hay ninguno.</p>`}
-  <h2>Datos de prueba</h2>
-  <button class="btn danger" id="aWipe">Borrar todos los despachos y devoluciones</button>`;
+function agregarDev(i, serial){
+  const dv = S.dev, it = dv.items[i];
+  it.ahora = n2(it.ahora + 1); it.serialesAhora.push(serial || "");
+  dv.pila.push({i, serial}); S.espera = null; S.ultimo = i;
+  beep("ok"); render(); S.ultimo = null;
+  setStatus("ok", `${it.codigo}: ${fnum(it.ahora)} a devolver`, serial ? `Serial ${serial}.` : "");
 }
-
-function descargar(nombre, contenido, tipo){
-  const blob = new Blob([contenido], {type: tipo});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = nombre;
-  document.body.appendChild(a); a.click();
-  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+function deshacerDev(){
+  const dv = S.dev, p = dv.pila.pop(); if (!p) return;
+  const it = dv.items[p.i];
+  if (p.metros){ it.ahora = n2(it.ahora - p.metros); it.metros.pop(); }
+  else { it.ahora = n2(it.ahora - 1); it.serialesAhora.pop(); }
+  S.espera = null; render(); setStatus("", `Se quitó el último registro de ${it.codigo}`);
 }
-function exportCSV(){
-  const cel = v => { const s = String(v == null ? "" : v); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  const rows = [["Tipo","Factura","Cliente","Fecha","Responsable","Codigo","Descripcion","Serial","Motivo","Nota"]];
-  S.lista.forEach(d => d.items.forEach(it => {
-    for (let k = 0; k < it.hechos; k++) rows.push([d.estado === "despachada" ? "Salida" : "Salida en curso", d.numero, d.cliente, fmt(d.fin || d.actualizado), d.despachador, it.codigo, it.descripcion, (it.seriales || [])[k] || "", "", ""]);
-  }));
-  S.devs.forEach(dv => dv.items.forEach(it => {
-    for (let k = 0; k < it.cantidad; k++) rows.push(["Devolucion", dv.numeroFactura, dv.cliente, fmt(dv.fecha), dv.despachador, it.codigo, it.descripcion, (it.seriales || [])[k] || "", dv.motivo, dv.nota]);
-  }));
-  const fecha = new Date().toISOString().slice(0, 10);
-  descargar(`despachos_${fecha}.csv`, "\uFEFF" + rows.map(r => r.map(cel).join(";")).join("\r\n"), "text/csv;charset=utf-8");
-}
-function exportJSON(){
-  const data = {app: "control-despacho", version: 2, exportado: now(), despachos: lsGet("despachos", {}), devoluciones: lsGet("devoluciones", []), aliases: lsGet("aliases", {}), catalogo: lsGet("catalogo", {})};
-  descargar(`respaldo_despacho_${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 1), "application/json");
-}
-async function importJSON(file){
+async function registrarDevolucion(){
+  const dv = S.dev;
+  if (!dv.motivo){ bad("Elige el motivo de la devolución", "Está arriba, antes de la lista de productos."); const m = $("#dvMot"); if (m) m.focus(); return; }
+  const estadoFinal = dv.motivo === MOTIVOS[0] ? "garantia" : "deposito";
+  const doc = dv.numeroFactura || dv.id, errores = [];
+  S.busy = true; setStatus("", "Registrando devolución…");
+  for (const it of dv.items.filter(x => x.ahora > 0)){
+    for (const s of it.serialesAhora.filter(Boolean)){
+      try { await DB.rpc("cambiar_estado_unidad", {p_serial: s, p_de: ["despachada"], p_a: estadoFinal, p_tipo: "devolucion", p_documento: doc, p_nota: dv.motivo}); }
+      catch(e){ errores.push(`${s}: ${errMsg(e)}`); }
+    }
+    for (const m of (it.metros || [])){
+      try {
+        if (m.rollo && estadoFinal === "deposito") await DB.rpc("mover_metros", {p_serial: m.rollo, p_delta: m.metros, p_tipo: "devolucion", p_documento: doc, p_nota: dv.motivo});
+        else await DB.insert("movimientos", {tipo: "devolucion", producto: it.codigo, cantidad: 0, metros: m.metros, documento: doc, nota: dv.motivo + " (retazo)"});
+      } catch(e){ errores.push(`${it.codigo} ${fnum(m.metros)} m: ${errMsg(e)}`); }
+    }
+    const sinSerial = it.tipo !== "metro" ? it.serialesAhora.filter(x => !x).length : 0;
+    if (sinSerial) { try { await DB.insert("movimientos", {tipo: "devolucion", producto: it.codigo, cantidad: sinSerial, documento: doc, nota: dv.motivo}); } catch(e){ errores.push(errMsg(e)); } }
+  }
+  const items = dv.items.filter(x => x.ahora > 0).map(it => ({codigo: it.codigo, descripcion: it.descripcion, tipo: it.tipo, cantidad: it.ahora, seriales: it.serialesAhora.filter(Boolean), metros: it.metros}));
   try {
-    const data = JSON.parse(await file.text());
-    if (data.app !== "control-despacho") throw new Error("Este archivo no es un respaldo de esta app.");
-    const des = Object.assign(lsGet("despachos", {}), data.despachos || {});
-    const devIds = new Set(lsGet("devoluciones", []).map(d => d.id));
-    const devs = lsGet("devoluciones", []).concat((data.devoluciones || []).filter(d => !devIds.has(d.id)));
-    lsSet("despachos", des); lsSet("devoluciones", devs); lsSet("aliases", Object.assign(lsGet("aliases", {}), data.aliases || {})); lsSet("catalogo", Object.assign(lsGet("catalogo", {}), data.catalogo || {}));
-    Store.load();
-    S.msg = {kind: "ok", text: `Respaldo importado: ${Object.keys(data.despachos || {}).length} despachos y ${(data.devoluciones || []).length} devoluciones.`};
-  } catch(e){ S.msg = {kind: "bad", text: e.message || "No se pudo leer el respaldo."}; }
-  render();
+    await DB.insert("devoluciones", {id: dv.id, numero_factura: dv.numeroFactura || null, cliente: dv.cliente || null, motivo: dv.motivo, nota: dv.nota || null, vinculada: dv.vinculada, datos: {items, errores, usuario: nombreUsuario()}});
+    S.busy = false;
+    S.devCerrada = {numero: dv.numeroFactura, motivo: dv.motivo, n: items.length, errores}; S.dev = null; S.espera = null;
+    beep(errores.length ? "warn" : "ok"); go("devListo");
+  } catch(e){ S.busy = false; bad("No se pudo registrar la devolución", errMsg(e)); }
+}
+function vDevListo(){
+  const x = S.devCerrada;
+  return `<div class="big-ok">${ICO.ok}<h1>Devolución registrada</h1>
+    <p class="muted">${x.n} productos${x.numero ? " de la factura " + esc(x.numero) : ""}. Motivo: ${esc(x.motivo)}.</p></div>
+    ${x.errores.length ? `<div class="note bad"><b>Revisa estas unidades:</b><br>${x.errores.map(esc).join("<br>")}</div>` : ""}
+    <button class="btn primary" id="dlNew" style="margin-top:12px">Registrar otra devolución</button>
+    <button class="btn" id="dlList" style="margin-top:10px">Ver devoluciones</button>`;
 }
 
+/* ================= INVENTARIO ================= */
+function vInventario(){
+  const r = S.inv;
+  return `
+  <h1>Inventario</h1>
+  <p class="muted">Escanea o escribe un serial, un rollo o un código de producto para ver dónde está y su historia.</p>
+  <div class="scanrow" style="margin-top:10px"><input class="in" id="ivQ" placeholder="Serial, código o descripción" value="${esc(S.invQ)}" autocomplete="off"><button class="btn primary" id="ivGo">Buscar</button></div>
+  ${msgBox()}
+  <div style="margin-top:14px">${!r ? "" : r.cargando ? `<p class="muted"><span class="spin"></span> Buscando…</p>` : r.rollos ? vRollos(r.rollos) : r.unidad ? vUnidad(r) : r.producto ? vProducto(r) : r.lista ? vListaProd(r.lista) : `<p class="muted">No se encontró nada con "${esc(S.invQ)}".</p>`}</div>
+  <h2>Catálogo (${Object.keys(S.prod).length} productos)</h2>
+  <p class="muted small">Importa el listado de inventario de Saint exportado a Excel, con una columna de código y otra de descripción.</p>
+  <label class="btn">Importar catálogo desde Excel o CSV<input type="file" accept=".xlsx,.xls,.csv" id="ivCat" hidden></label>
+  <button class="btn" id="ivRollos" style="margin-top:10px">Ver rollos de cable</button>`;
+}
+const ESTADOS = {deposito: "En depósito", despachada: "Despachada", garantia: "En garantía", baja: "Anulada", agotado: "Rollo agotado"};
+const TIPO_MOV = {ingreso: "Ingresó", despacho: "Salió", devolucion: "Devuelta", corte: "Corte", anulacion: "Anulación", ajuste: "Ajuste", garantia: "Garantía", baja: "Baja"};
+function vUnidad(r){
+  const u = r.unidad, p = S.prod[u.producto];
+  return `<div class="panel">
+    <dl class="kv"><dt>Serial</dt><dd>${esc(u.serial)}</dd><dt>Producto</dt><dd>${esc(u.producto)}</dd><dt></dt><dd style="font-weight:400">${esc(p ? p.descripcion : "")}</dd>
+    <dt>Estado</dt><dd>${esc(ESTADOS[u.estado] || u.estado)}</dd>
+    ${u.metros_restantes != null ? `<dt>Metros</dt><dd>${fnum(u.metros_restantes)} de ${fnum(u.metros_iniciales)} m</dd>` : ""}
+    ${u.documento ? `<dt>Último documento</dt><dd>${esc(u.documento)}</dd>` : ""}</dl>
+    <div class="row" style="margin-top:12px"><button class="btn" id="ivReprint">Reimprimir etiqueta</button>
+    ${esAdmin() ? `<button class="btn" id="ivEstado">Cambiar estado</button>` : ""}</div></div>
+  <h2>Historia</h2>
+  ${(r.movs || []).map(m => `<div class="mov"><b>${esc(TIPO_MOV[m.tipo] || m.tipo)}</b>${m.metros ? ` ${fnum(m.metros)} m` : ""}${m.documento ? `, ${esc(m.documento)}` : ""}${m.nota ? `, ${esc(m.nota)}` : ""}<div class="small muted">${esc(fmt(m.fecha))}${r.nombres && r.nombres[m.usuario] ? ", " + esc(r.nombres[m.usuario]) : ""}</div></div>`).join("") || `<p class="muted">Sin movimientos.</p>`}`;
+}
+function vProducto(r){
+  const p = r.producto, t = tipoDe(p);
+  const dep = (r.unidades || []).filter(u => u.estado === "deposito");
+  return `<div class="panel stack">
+    <div><span class="code">${esc(p.codigo)}</span><div class="desc">${esc(p.descripcion)}</div></div>
+    <div><label class="f" for="ivTipo">Tipo</label><select class="in" id="ivTipo">${Object.entries(TIPOS).map(([k, v]) => `<option value="${k}" ${k === t ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></div>
+    ${t === "metro" ? `<div><label class="f" for="ivAlerta">Avisar cuando un rollo baje de (metros)</label><input class="in" id="ivAlerta" inputmode="decimal" value="${fnum(p.metros_alerta || 10)}"></div>` : ""}
+    <div class="small muted">${t === "metro" ? `${dep.length} rollos en depósito, ${fnum(dep.reduce((a, u) => a + Number(u.metros_restantes || 0), 0))} m en total.` : t === "serial" ? `${dep.length} unidades con serial en depósito.` : "Producto sin serial: se cuenta en los movimientos."}</div>
+    ${r.codigos && r.codigos.length ? `<div class="small">Códigos de barra: ${r.codigos.map(c => `<b>${esc(c.codigo)}</b>`).join(", ")}</div>` : ""}
+    <div class="row"><button class="btn" id="ivEtqP">Crear etiqueta del producto</button></div>
+  </div>
+  ${dep.length ? `<h2>En depósito</h2>${dep.slice(0, 200).map(u => `<div class="mov"><b>${esc(u.serial)}</b>${u.metros_restantes != null ? `, ${fnum(u.metros_restantes)} m` : ""}</div>`).join("")}` : ""}`;
+}
+function vListaProd(list){
+  if (!list.length) return `<p class="muted">No se encontró nada con "${esc(S.invQ)}".</p>`;
+  return `<ul class="hist">${list.map(p => `<li><button data-prod="${esc(p.codigo)}"><div class="grow"><div class="n">${esc(p.codigo)}</div><div class="c">${esc(p.descripcion)}</div></div><span class="chip info">${esc(TIPOS[tipoDe(p)])}</span></button></li>`).join("")}</ul>`;
+}
+async function buscarInventario(q){
+  q = norm(q); S.invQ = q; if (!q) return;
+  S.inv = {cargando: true}; render();
+  try {
+    const cod = productoDe(q);
+    if (cod) return verProducto(cod);
+    const u = await DB.one("unidades", "serial", q);
+    if (u){
+      const movs = await DB.q(sb.from("movimientos").select("*").eq("serial", q).order("fecha", {ascending: false}).limit(100));
+      const ids = Array.from(new Set(movs.map(m => m.usuario).filter(Boolean)));
+      const nombres = {};
+      if (ids.length){ const ps = await DB.q(sb.from("perfiles").select("id,nombre,email").in("id", ids)); ps.forEach(p => { nombres[p.id] = p.nombre || p.email; }); }
+      S.inv = {unidad: u, movs, nombres};
+    } else {
+      const lista = Object.values(S.prod).filter(p => norm(p.codigo).includes(q) || norm(p.descripcion).includes(q)).slice(0, 40);
+      S.inv = {lista};
+    }
+  } catch(e){ S.inv = null; S.msg = {kind: "bad", text: errMsg(e)}; }
+  if (S.view === "inventario") render();
+}
+async function verProducto(cod){
+  S.inv = {cargando: true}; render();
+  try {
+    const [unidades, codigos] = await Promise.all([
+      DB.all("unidades", q => q.eq("producto", cod).in("estado", ["deposito"]).order("creado")),
+      DB.q(sb.from("codigos_barra").select("*").eq("producto", cod))]);
+    S.inv = {producto: S.prod[cod], unidades, codigos};
+  } catch(e){ S.inv = null; S.msg = {kind: "bad", text: errMsg(e)}; }
+  if (S.view === "inventario") render();
+}
+async function verRollos(){
+  S.inv = {cargando: true}; render();
+  try { S.inv = {rollos: await DB.all("unidades", q => q.not("metros_restantes", "is", null).eq("estado", "deposito").order("producto"))}; }
+  catch(e){ S.inv = null; S.msg = {kind: "bad", text: errMsg(e)}; }
+  if (S.view === "inventario") render();
+}
+function vRollos(rs){
+  if (!rs.length) return `<p class="muted">No hay rollos en depósito.</p>`;
+  return `<h2 style="margin-top:0">Rollos en depósito (${rs.length})</h2>` + rs.map(u => { const p = S.prod[u.producto], bajo = p && u.metros_restantes < (p.metros_alerta || 10);
+    return `<div class="mov"><b>${esc(u.serial)}</b> ${esc(u.producto)}: <b style="color:${bajo ? "var(--bad)" : "inherit"}">${fnum(u.metros_restantes)} m</b> de ${fnum(u.metros_iniciales)}${bajo ? " (por acabarse)" : ""}</div>`; }).join("");
+}
 async function importarCatalogo(file){
   S.msg = {kind: "busy", text: "Leyendo el catálogo…"}; render();
   try {
@@ -821,110 +1495,211 @@ async function importarCatalogo(file){
       const c = row.findIndex(x => /c[oó]d/.test(x)), d = row.findIndex(x => /desc/.test(x));
       if (c >= 0 && d >= 0){ hdr = r; ci = c; di = d; break; }
     }
-    let n = 0;
+    const nuevos = [], actualizar = [];
     rows.slice(hdr + 1).forEach(row => {
       const cod = norm(row[ci]); if (!cod || cod.length < 2 || /^c[oó]d/i.test(cod)) return;
-      S.catalogo[cod] = String(row[di] || "").trim(); n++;
+      const desc = String(row[di] || "").trim();
+      if (S.prod[cod]) { if (desc && desc !== S.prod[cod].descripcion) actualizar.push({codigo: cod, descripcion: desc}); }
+      else if (!nuevos.some(n => n.codigo === cod)) nuevos.push(Object.assign({codigo: cod, descripcion: desc}, tipoAProducto(adivinarTipo(desc))));
     });
-    if (!n) throw new Error("No se encontraron productos. El archivo debe tener una columna de código y otra de descripción.");
-    Store.saveCatalogo();
-    S.msg = {kind: "ok", text: `Catálogo importado: ${n} productos.`};
-  } catch(e){ S.msg = {kind: "bad", text: e.message || "No se pudo leer el archivo."}; }
+    if (!nuevos.length && !actualizar.length) throw new Error("No se encontraron productos nuevos. El archivo debe tener una columna de código y otra de descripción.");
+    for (let k = 0; k < nuevos.length; k += 500){ S.msg = {kind: "busy", text: `Guardando productos ${k + 1} a ${Math.min(k + 500, nuevos.length)} de ${nuevos.length}…`}; render(); await DB.upsert("productos", nuevos.slice(k, k + 500), {onConflict: "codigo", ignoreDuplicates: true}); }
+    for (const a of actualizar) await DB.update("productos", "codigo", a.codigo, {descripcion: a.descripcion, actualizado: now()});
+    await cargarCatalogo();
+    S.msg = {kind: "ok", text: `Catálogo importado: ${nuevos.length} productos nuevos y ${actualizar.length} descripciones actualizadas. Los cables se marcaron "por metro" según su descripción; revisa el tipo de cada producto buscándolo aquí.`};
+  } catch(e){ S.msg = {kind: "bad", text: errMsg(e)}; }
   render();
 }
 
-/* ================= eventos por vista ================= */
-function armar(btn, texto, accion){
-  btn.onclick = () => {
-    if (btn.dataset.armed) return accion();
-    const orig = btn.textContent;
-    btn.dataset.armed = "1"; btn.textContent = texto;
-    setTimeout(() => { if (btn.isConnected){ delete btn.dataset.armed; btn.textContent = orig; } }, 3500);
-  };
+/* ================= ETIQUETAS ================= */
+async function cargarEtiquetas(){
+  try {
+    S.etq = await DB.q(sb.from("etiquetas").select("*").eq("impresa", false).order("creado").limit(500));
+    S.etq.forEach(e => { if (S.etqSel[e.id] === undefined) S.etqSel[e.id] = true; });
+  } catch(e){ S.msg = {kind: "bad", text: errMsg(e)}; }
+  if (S.view === "etiquetas") render();
 }
-function bindHist(){
-  $$("[data-open]").forEach(b => b.onclick = () => {
-    const d = getDesp(b.dataset.open);
-    if (d && d.estado === "en_proceso" && S.view === "inicio") return empezar(clone(d));
-    S.detalle = b.dataset.open; go("detalle");
-  });
-  $$("[data-dev]").forEach(b => b.onclick = () => verDevolucion(b.dataset.dev));
+function vEtiquetas(){
+  const sel = S.etq.filter(e => S.etqSel[e.id]);
+  return `
+  <h1>Etiquetas por imprimir</h1>
+  <p class="muted">Abre esta pantalla en la computadora conectada a la impresora de etiquetas. Las etiquetas que se crean en los teléfonos aparecen aquí al instante.</p>
+  ${msgBox()}
+  <div class="row" style="margin-top:10px">
+    <button class="btn primary" id="etPrint" ${sel.length ? "" : "disabled"}>Imprimir ${sel.length} seleccionadas</button>
+    <button class="btn" id="etDone" ${sel.length ? "" : "disabled"}>Marcar como impresas</button>
+  </div>
+  <p class="small muted" style="margin-top:8px">Tamaño: ${esc(S.prefs.etiqueta)} mm (se cambia en Ajustes ⚙️). En la ventana de impresión elige tu impresora de etiquetas, márgenes "Ninguno" y escala 100%.</p>
+  ${S.etq.length ? `<label class="check"><input type="checkbox" id="etAll" ${sel.length === S.etq.length ? "checked" : ""}> Seleccionar todas</label>
+  <ul class="lbl-list">${S.etq.map(e => `<li><input type="checkbox" data-etq="${e.id}" ${S.etqSel[e.id] ? "checked" : ""} aria-label="Seleccionar etiqueta">
+    <div class="grow"><b>${esc(e.tipo === "producto" ? e.producto : e.serial)}</b><div class="small muted">${esc(e.tipo === "producto" ? "Etiqueta de producto" : e.tipo === "rollo" ? `Rollo ${fnum(e.metros)} m, ${e.producto}` : e.producto)} · ${esc(fmt(e.creado))}</div></div></li>`).join("")}</ul>` : `<p class="muted" style="margin-top:14px">No hay etiquetas pendientes.</p>`}
+  <button class="btn" id="etTest" style="margin-top:10px">Imprimir una etiqueta de prueba</button>`;
 }
-function refocusSearch(id, pos){ const n = $(id); if (!n) return; n.focus(); try { n.setSelectionRange(pos, pos); } catch(e){} }
+async function qrDataUrl(texto){
+  await loadScript("https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js");
+  const el = $("#qrtmp"); el.innerHTML = "";
+  new QRCode(el, {text: texto, width: 256, height: 256, correctLevel: QRCode.CorrectLevel.M});
+  const cv = el.querySelector("canvas");
+  return cv ? cv.toDataURL("image/png") : (el.querySelector("img") || {}).src;
+}
+async function imprimir(lista){
+  const [w, h] = S.prefs.etiqueta.split("x").map(Number);
+  const qr = Math.min(h - 2, w * 0.45);
+  const partes = [];
+  for (const e of lista){
+    const texto = e.tipo === "producto" ? e.producto : e.serial;
+    const img = await qrDataUrl(texto);
+    const desc = (e.descripcion || (S.prod[e.producto] && S.prod[e.producto].descripcion) || "").slice(0, 60);
+    partes.push(`<div class="etq" style="width:${w}mm;height:${h}mm"><img src="${img}" style="width:${qr}mm;height:${qr}mm" alt="">
+      <div class="tx"><div class="s" style="font-size:${h * 0.14}mm">${esc(texto)}</div>
+      ${e.tipo !== "producto" ? `<div class="c" style="font-size:${h * 0.1}mm">${esc(e.producto)}</div>` : ""}
+      ${e.tipo === "rollo" ? `<div class="c" style="font-size:${h * 0.12}mm">${fnum(e.metros)} m</div>` : ""}
+      <div class="d" style="font-size:${h * 0.085}mm">${esc(desc)}</div>
+      <div class="b" style="font-size:${h * 0.07}mm">SONIDOS TITO</div></div></div>`);
+  }
+  $("#print").innerHTML = `<style>@page{size:${w}mm ${h}mm;margin:0}</style>` + partes.join("");
+  setTimeout(() => window.print(), 300);
+}
 
+/* ================= AJUSTES ================= */
+function vAjustes(){
+  return `
+  <h1>Ajustes</h1>
+  ${msgBox()}
+  <div class="panel stack" style="margin-top:12px">
+    <div><b>${esc(nombreUsuario())}</b><div class="small muted">${esc(S.perfil.email)}, ${S.perfil.rol === "admin" ? "administrador" : "depósito"}</div></div>
+    <label class="check"><input type="checkbox" id="aSon" ${S.prefs.sonido ? "checked" : ""}> Sonido al escanear</label>
+    <label class="check"><input type="checkbox" id="aTrans" ${S.prefs.transicion ? "checked" : ""}> Permitir despachar seriales que nunca ingresaron (mientras se registra el inventario viejo)</label>
+    <div><label class="f" for="aEtq">Tamaño de etiqueta</label><select class="in" id="aEtq">${["50x25", "40x30", "60x40", "100x50"].map(s => `<option ${S.prefs.etiqueta === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>
+    ${bloqueInstalar()}
+    <button class="btn" id="aRecargar">Recargar catálogo</button>
+    <button class="btn danger" id="aSalir">Cerrar sesión</button>
+  </div>
+  ${esAdmin() ? `<h2>Usuarios</h2><p class="muted small">Los usuarios nuevos se crean en Supabase (Authentication, Users). Aquí les pones nombre, rol y los activas o desactivas.</p><div id="aUsuarios"><p class="muted"><span class="spin"></span> Cargando…</p></div>` : ""}`;
+}
+let installEvt = null;
+const instalada = () => window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const bloqueInstalar = () => instalada() ? "" : installEvt ? `<button class="btn" id="bInstalar">Instalar la app en este teléfono</button>` : `<p class="small muted">Para instalarla: menú de Chrome (tres puntos), "Instalar aplicación".</p>`;
+async function cargarUsuarios(){
+  const cont = $("#aUsuarios"); if (!cont) return;
+  try {
+    const ps = await DB.q(sb.from("perfiles").select("*").order("creado"));
+    cont.innerHTML = `<div class="panel"><table class="edit-items"><tbody>${ps.map(p => `<tr>
+      <td><input data-pn="${p.id}" value="${esc(p.nombre || "")}" placeholder="Nombre" aria-label="Nombre"><div class="small muted">${esc(p.email)}</div></td>
+      <td style="width:120px"><select class="tipo-sel" data-pr="${p.id}" ${p.id === S.user.id ? "disabled" : ""}><option value="deposito" ${p.rol === "deposito" ? "selected" : ""}>Depósito</option><option value="admin" ${p.rol === "admin" ? "selected" : ""}>Admin</option></select>
+      <label class="small" style="display:flex;gap:4px;align-items:center;margin-top:4px"><input type="checkbox" data-pa="${p.id}" ${p.activo ? "checked" : ""} ${p.id === S.user.id ? "disabled" : ""}> Activo</label></td></tr>`).join("")}</tbody></table></div>`;
+    const upd = (id, patch) => DB.update("perfiles", "id", id, patch).then(() => { if (id === S.user.id) Object.assign(S.perfil, patch); }).catch(e => alert(errMsg(e)));
+    $$("[data-pn]").forEach(i => i.onchange = () => upd(i.dataset.pn, {nombre: i.value.trim()}));
+    $$("[data-pr]").forEach(s => s.onchange = () => upd(s.dataset.pr, {rol: s.value}));
+    $$("[data-pa]").forEach(c => c.onchange = () => upd(c.dataset.pa, {activo: c.checked}));
+  } catch(e){ cont.innerHTML = `<div class="note bad">${esc(errMsg(e))}</div>`; }
+}
+
+/* ================= eventos por vista ================= */
 const bind = {
-  inicio(){
-    $("#inPdf").addEventListener("change", e => { const f = e.target.files[0]; if (f) cargarPDF(f); });
-    $("#inFoto").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) cargarFoto(f); });
-    const bi = $("#bInstalar"); if (bi) bi.onclick = async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch(e){} installEvt = null; render(); };
-    $("#bManual").onclick = () => abrirRevision({numero: "", cliente: "", items: [{codigo: "", descripcion: "", cantidad: 1}]}, "manual");
-    $("#bEjemplo").onclick = () => abrirRevision(EJEMPLO, "ejemplo");
+  login(){
+    const g = $("#lGo"); if (!g) return;
+    g.onclick = entrar;
+    $("#lPass").addEventListener("keydown", e => { if (e.key === "Enter") entrar(); });
+  },
+  salida(){
+    const tomar = async (f) => { try { abrirRevision(await leerArchivo(f)); } catch(e){ S.msg = {kind: "bad", text: e.message || "No se pudo leer."}; render(); } };
+    $("#inFoto").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) tomar(f); });
+    $("#inPdf").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) tomar(f); });
+    $("#bManual").onclick = () => abrirRevision({items: [{codigo: "", descripcion: "", cantidad: 1}]});
+    const q = $("#hq");
+    q.oninput = () => { S.hq = q.value; const p = q.selectionStart; render(); const n = $("#hq"); n.focus(); try { n.setSelectionRange(p, p); } catch(e){} };
+    q.addEventListener("keydown", e => { if (e.key === "Enter" && q.value.trim()) abrirDetalle(q.value.trim()); });
     bindHist();
   },
   revisar(){
-    const d = S.draft;
-    const sync = () => {
-      d.numero = $("#rNum").value.trim(); d.despachador = $("#rDes").value.trim(); d.cliente = $("#rCli").value.trim(); d.pedirSerial = $("#rSer").checked;
-      $$("[data-k]").forEach(inp => {
-        const it = d.items[+inp.dataset.i];
-        if (inp.dataset.k === "codigo") it.codigo = norm(inp.value); else it.cantidad = Math.max(0, parseInt(inp.value, 10) || 0);
-      });
-    };
-    $$("[data-del]").forEach(b => b.onclick = () => { sync(); d.items.splice(+b.dataset.del, 1); render(); });
-    $("#rAdd").onclick = () => { sync(); d.items.push({codigo: "", descripcion: "", cantidad: 1}); render(); const ins = $$('[data-k="codigo"]'); ins[ins.length - 1].focus(); };
-    $("#rCancel").onclick = () => { S.draft = null; S.msg = null; go("inicio"); };
-    $("#rGo").onclick = () => {
-      sync();
-      d.items = d.items.filter(i => i.codigo && i.cantidad > 0);
-      if (!d.numero){ S.msg = {kind: "bad", text: "Falta el número de factura."}; return render(); }
-      if (!d.items.length){ S.msg = {kind: "bad", text: "Agrega al menos un producto con cantidad."}; return render(); }
-      const m = {}; d.items.forEach(i => { if (m[i.codigo]) m[i.codigo].cantidad += i.cantidad; else m[i.codigo] = clone(i); }); d.items = Object.values(m);
-      if (d.despachador){ S.prefs.despachador = d.despachador; savePrefs(); }
-      let nuevos = 0; d.items.forEach(i => { if (!Object.keys(S.catalogo).some(k => canon(k) === canon(i.codigo))){ S.catalogo[i.codigo] = i.descripcion || ""; nuevos++; } });
-      if (nuevos) Store.saveCatalogo();
-      const prev = getDesp(d.numero);
-      if (prev && prev.estado === "despachada"){ beep("bad"); S.msg = {kind: "bad", text: `La factura ${prev.numero} ya fue despachada por ${prev.despachador || "sin nombre"} el ${fmt(prev.fin)}. No se puede despachar dos veces.`}; return render(); }
-      S.msg = null;
-      if (prev) return empezar(clone(prev));
-      empezar({numero: d.numero, cliente: d.cliente, rif: d.rif, vendedor: d.vendedor, fecha: d.fecha, pedirSerial: d.pedirSerial, despachador: d.despachador,
-        estado: "en_proceso", inicio: now(), fin: null, pila: [],
-        items: d.items.map(i => ({codigo: i.codigo, descripcion: i.descripcion || "", cantidad: i.cantidad, hechos: 0, seriales: []}))}, true);
-    };
+    $("#rNum").oninput = e => { S.draft.numero = e.target.value.trim(); };
+    $("#rCli").oninput = e => { S.draft.cliente = e.target.value.trim(); };
+    bindLineas(S.draft.items, "r");
+    $("#rCancel").onclick = () => { S.draft = null; S.msg = null; go("salida"); };
+    $("#rGo").onclick = empezarDespacho;
   },
   despacho(){
-    const u = $("#dUndo"); if (u) u.onclick = deshacer;
-    const c = $("#dClose"); if (c) c.onclick = cerrar;
-    $("#dPause").onclick = () => { Store.saveDesp(S.cur); S.cur = null; S.esperaSerial = null; go("inicio"); };
+    const u = $("#dUndo"); if (u) u.onclick = deshacerDespacho;
+    const c = $("#dClose"); if (c) c.onclick = cerrarDespacho;
+    $("#dPause").onclick = async () => { await guardarDespacho(); S.cur = null; S.espera = null; go("salida"); cargarHistorial(); };
   },
-  listo(){ $("#lNew").onclick = () => { S.cerrado = null; go("inicio"); }; },
-  historial(){
-    const q = $("#hq");
-    q.oninput = () => { S.hq = q.value; const p = q.selectionStart; render(); refocusSearch("#hq", p); };
-    bindHist();
-  },
+  listo(){ $("#lNew").onclick = () => { S.cerrado = null; go("salida"); }; },
   detalle(){
-    $$("[data-back]").forEach(b => b.onclick = () => go("historial"));
-    const c = $("#dtCont"); if (c) c.onclick = () => { const d = getDesp(S.detalle); if (d) empezar(clone(d)); };
-    const dv = $("#dtDev"); if (dv) dv.onclick = () => iniciarDevolucion(S.detalle);
-    armar($("#dtDel"), "Toca de nuevo para borrar", () => { Store.removeDesp(S.detalle); go("historial"); });
+    $$("[data-back]").forEach(b => b.onclick = () => { go("salida"); cargarHistorial(); });
+    const c = $("#dtCont"); if (c) c.onclick = () => abrirDespacho(S.detalleData.d);
+    const dv = $("#dtDev"); if (dv) dv.onclick = () => { go("devNueva"); iniciarDevolucion(S.detalle); };
+    armar($("#dtDel"), "Toca de nuevo para borrar", async () => { try { await DB.del("despachos", "numero", S.detalle); go("salida"); cargarHistorial(); } catch(e){ alert(errMsg(e)); } });
     bindHist();
+  },
+  ingreso(){
+    $("#gProv").oninput = e => { S.ingForm.proveedor = e.target.value; };
+    $("#gNum").oninput = e => { S.ingForm.numero = e.target.value; };
+    $("#gFoto").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f && leerFormIngreso()) ingresoDesdeArchivo(f); });
+    $("#gPdf").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f && leerFormIngreso()) ingresoDesdeArchivo(f); });
+    const gf = $("#gFile"); if (gf) gf.onclick = () => { if (leerFormIngreso()){ const f = S.pendFile.file; S.pendFile = null; ingresoDesdeArchivo(f); } };
+    $("#gManual").onclick = () => { if (leerFormIngreso()) abrirIngresoRevision([]); };
+    $$("[data-ing]").forEach(b => b.onclick = () => {
+      const g = S.ingLista.find(x => String(x.id) === b.dataset.ing); if (!g) return;
+      if (g.estado === "abierto") abrirIngreso(g);
+      else sheet(`<h2 style="margin-top:0">Ingreso ${esc(g.numero_factura)}</h2><p class="muted small">${esc(g.proveedor)}, cerrado el ${esc(fmt(g.cerrado_en))}${g.nota ? ". " + esc(g.nota) : ""}</p>
+        <ul class="items">${(g.items || []).map(it => `<li class="item"><div class="item-top"><span class="code">${esc(it.producto)}</span><span class="qty">${qtyTxt(it.recibidos, it.cantidad, it.tipo)}</span></div><div class="desc">${esc(it.descripcion)}</div>${serialList(it.seriales)}</li>`).join("")}</ul>
+        <button class="btn" id="svClose">Cerrar</button>`, () => { $("#svClose").onclick = cerrarSheet; });
+    });
+  },
+  ingresoRevisar(){
+    bindLineas(S.ingDraft.items, "i");
+    $("#giCancel").onclick = () => { S.ingDraft = null; S.msg = null; go("ingreso"); };
+    $("#giGo").onclick = empezarIngreso;
+  },
+  ingresoRecibir(){
+    $("#giClose").onclick = cerrarIngreso;
+    $("#giPause").onclick = async () => { await guardarIngreso(); S.ing = null; S.espera = null; go("ingreso"); cargarIngresos(); };
+    $("#giEtqTodo").onchange = e => { S.ing.etiquetarTodo = e.target.checked; lsSet("etiquetarTodo", e.target.checked); };
+    $("#giFoto").addEventListener("change", async e => {
+      const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+      setStatus("", "Subiendo foto…");
+      try { await subirFoto(f, "ingreso", S.ing.id); setStatus("ok", "Foto guardada"); cargarFotosIngreso(); }
+      catch(err){ bad("No se pudo subir la foto", errMsg(err)); }
+    });
+    $("#giAddLine").onclick = () => {
+      sheet(`<h2 style="margin-top:0">Producto que no está en la factura</h2>
+        <label class="f" for="shCod">Código en Saint</label><input class="in" id="shCod" list="dlProd2" autocomplete="off" autofocus>
+        <datalist id="dlProd2">${Object.values(S.prod).slice(0, 3000).map(p => `<option value="${esc(p.codigo)}">${esc(p.descripcion)}</option>`).join("")}</datalist>
+        <label class="f" for="shDesc" style="margin-top:8px">Descripción (si es nuevo)</label><input class="in" id="shDesc">
+        <label class="f" style="margin-top:8px">Tipo (si es nuevo)</label>${selectorTipo(0, "serial", "sh")}
+        <div class="row" style="margin-top:12px"><button class="btn primary" id="shOk">Agregar</button><button class="btn" id="shNo">Cancelar</button></div>`, () => {
+        $("#shNo").onclick = cerrarSheet;
+        $("#shOk").onclick = async () => {
+          const cod = norm($("#shCod").value); if (!cod) return;
+          const p = productoDe(cod) || cod;
+          try {
+            if (!S.prod[p]) await asegurarProductos([{producto: p, descripcion: $("#shDesc").value.trim(), tipo: $('[data-g="sh"]').value}]);
+            cerrarSheet(); agregarLineaIngreso(p, 0);
+          } catch(e){ alert(errMsg(e)); }
+        };
+      });
+    };
+    $$("[data-gen]").forEach(b => b.onclick = () => generarSerialIngreso(+b.dataset.gen));
+    $$("[data-rollo]").forEach(b => b.onclick = () => registrarRollo(+b.dataset.rollo));
+    $$("[data-cant]").forEach(b => b.onclick = () => { const it = S.ing.items[+b.dataset.cant]; pedirNumero(`Sumar ${it.producto}`, "¿Cuántas unidades llegaron?", fnum(Math.max(1, it.cantidad - it.recibidos)), n => sumarIngreso(+b.dataset.cant, n)); });
+    $$("[data-etqp]").forEach(b => b.onclick = () => { const it = S.ing.items[+b.dataset.etqp]; pedirNumero(`Etiquetas de ${it.producto}`, "Etiqueta con el código del producto, para cajas sin código de barras. ¿Cuántas copias?", fnum(Math.max(1, Math.ceil(it.cantidad))), async n => {
+      try { await DB.insert("etiquetas", Array.from({length: Math.min(200, Math.round(n))}, () => ({producto: it.producto, descripcion: it.descripcion, tipo: "producto"}))); contarEtiquetas(); setStatus("ok", `${Math.round(n)} etiquetas de ${it.producto} en la cola de impresión`); }
+      catch(e){ bad("No se pudieron crear", errMsg(e)); } }); });
+  },
+  ingresoListo(){
+    $("#glEtq").onclick = () => { go("etiquetas"); cargarEtiquetas(); };
+    $("#glNew").onclick = () => { S.ingCerrado = null; go("ingreso"); cargarIngresos(); };
   },
   devs(){
     $("#dvNew").onclick = () => { S.msg = null; go("devNueva"); };
-    const q = $("#dq"); if (q) q.oninput = () => { S.dq = q.value; const p = q.selectionStart; render(); refocusSearch("#dq", p); };
+    if (!S.devLista) cargarDevs();
     bindHist();
   },
   devNueva(){
-    const buscar = () => {
-      const n = $("#nvNum").value.trim();
-      if (!n){ S.msg = {kind: "bad", text: "Escribe el número de la factura."}; return render(); }
-      const d = getDesp(n);
-      if (!d){ S.msg = {kind: "bad", text: `La factura ${n} no está en el historial de este teléfono. Si salió antes de usar la app, regístrala sin factura del sistema.`}; render(); $("#nvNum").value = n; return; }
-      iniciarDevolucion(n);
-    };
+    const buscar = () => { const n = $("#nvNum").value.trim(); if (!n){ S.msg = {kind: "bad", text: "Escribe el número de la factura."}; return render(); } iniciarDevolucion(n); };
     $("#nvBuscar").onclick = buscar;
     $("#nvNum").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); buscar(); } });
-    $$("[data-nvpick]").forEach(b => b.onclick = () => iniciarDevolucion(b.dataset.nvpick));
     $("#nvLibre").onclick = () => iniciarDevolucionLibre($("#nvNum").value.trim());
     $("#nvCancel").onclick = () => { S.msg = null; go("devs"); };
   },
@@ -935,239 +1710,134 @@ const bind = {
     const n = $("#dvNum"); if (n) n.oninput = e => { dv.numeroFactura = e.target.value.trim(); };
     $("#dvSave").onclick = registrarDevolucion;
     $("#dvUndo").onclick = deshacerDev;
-    armar($("#dvCancel"), "Toca de nuevo para cancelar", () => { S.dev = null; S.esperaSerial = null; go("devs"); });
+    armar($("#dvCancel"), "Toca de nuevo para cancelar", () => { S.dev = null; S.espera = null; go("devs"); });
   },
   devListo(){
     $("#dlNew").onclick = () => { S.devCerrada = null; go("devNueva"); };
-    $("#dlList").onclick = () => { S.devCerrada = null; go("devs"); };
+    $("#dlList").onclick = () => { S.devCerrada = null; S.devLista = null; go("devs"); };
+  },
+  inventario(){
+    const q = $("#ivQ");
+    $("#ivGo").onclick = () => buscarInventario(q.value);
+    q.addEventListener("keydown", e => { if (e.key === "Enter") buscarInventario(q.value); });
+    $("#ivCat").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) importarCatalogo(f); });
+    $("#ivRollos").onclick = verRollos;
+    $$("[data-prod]").forEach(b => b.onclick = () => { S.invQ = b.dataset.prod; verProducto(b.dataset.prod); });
+    const r = S.inv;
+    const rp = $("#ivReprint"); if (rp) rp.onclick = async () => {
+      const u = r.unidad;
+      try { await nuevaEtiqueta({serial: u.serial, producto: u.producto, descripcion: S.prod[u.producto] ? S.prod[u.producto].descripcion : "", tipo: u.metros_iniciales != null ? "rollo" : "unidad", metros: u.metros_restantes}); S.msg = {kind: "ok", text: "Etiqueta enviada a la cola de impresión."}; render(); }
+      catch(e){ S.msg = {kind: "bad", text: errMsg(e)}; render(); }
+    };
+    const ce = $("#ivEstado"); if (ce) ce.onclick = () => {
+      const u = r.unidad;
+      sheet(`<h2 style="margin-top:0">Cambiar estado de ${esc(u.serial)}</h2><p class="muted small">Estado actual: ${esc(ESTADOS[u.estado])}.</p>
+        <select class="in" id="shEst">${Object.entries(ESTADOS).filter(([k]) => k !== u.estado && k !== "agotado").map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join("")}</select>
+        <input class="in" id="shNota" placeholder="Motivo del cambio" style="margin-top:8px">
+        <div class="row" style="margin-top:12px"><button class="btn primary" id="shOk">Cambiar</button><button class="btn" id="shNo">Cancelar</button></div>`, () => {
+        $("#shNo").onclick = cerrarSheet;
+        $("#shOk").onclick = async () => {
+          const a = $("#shEst").value, nota = $("#shNota").value.trim();
+          if (!nota){ $("#shNota").focus(); return; }
+          cerrarSheet();
+          try { await DB.rpc("cambiar_estado_unidad", {p_serial: u.serial, p_de: [u.estado], p_a: a, p_tipo: "ajuste", p_documento: null, p_nota: nota}); buscarInventario(u.serial); }
+          catch(e){ S.msg = {kind: "bad", text: errMsg(e)}; render(); }
+        };
+      });
+    };
+    const tp = $("#ivTipo"); if (tp) tp.onchange = async () => {
+      const p = r.producto, patch = tipoAProducto(tp.value);
+      try { await DB.update("productos", "codigo", p.codigo, Object.assign({actualizado: now()}, patch)); Object.assign(S.prod[p.codigo], patch); render(); }
+      catch(e){ S.msg = {kind: "bad", text: errMsg(e)}; render(); }
+    };
+    const al = $("#ivAlerta"); if (al) al.onchange = async () => {
+      const v = n2(num(al.value)); if (!(v >= 0)) return;
+      try { await DB.update("productos", "codigo", r.producto.codigo, {metros_alerta: v}); S.prod[r.producto.codigo].metros_alerta = v; } catch(e){ alert(errMsg(e)); }
+    };
+    const ep = $("#ivEtqP"); if (ep) ep.onclick = () => { const p = r.producto; pedirNumero(`Etiquetas de ${p.codigo}`, "¿Cuántas copias de la etiqueta del producto?", "1", async n => {
+      try { await DB.insert("etiquetas", Array.from({length: Math.min(200, Math.round(n))}, () => ({producto: p.codigo, descripcion: p.descripcion, tipo: "producto"}))); contarEtiquetas(); S.msg = {kind: "ok", text: "Etiquetas enviadas a la cola de impresión."}; render(); }
+      catch(e){ S.msg = {kind: "bad", text: errMsg(e)}; render(); } }); };
+  },
+  etiquetas(){
+    $$("[data-etq]").forEach(c => c.onchange = () => { S.etqSel[c.dataset.etq] = c.checked; render(); });
+    const all = $("#etAll"); if (all) all.onchange = () => { S.etq.forEach(e => { S.etqSel[e.id] = all.checked; }); render(); };
+    $("#etPrint").onclick = () => imprimir(S.etq.filter(e => S.etqSel[e.id]));
+    armar($("#etDone"), "Toca de nuevo para confirmar", async () => {
+      const ids = S.etq.filter(e => S.etqSel[e.id]).map(e => e.id);
+      try { await DB.q(sb.from("etiquetas").update({impresa: true}).in("id", ids)); ids.forEach(id => delete S.etqSel[id]); await cargarEtiquetas(); contarEtiquetas(); }
+      catch(e){ S.msg = {kind: "bad", text: errMsg(e)}; render(); }
+    });
+    $("#etTest").onclick = () => imprimir([{tipo: "unidad", serial: "ST-000000", producto: "EVO6-400.4", descripcion: "AMPLIFICADOR 4 CANALES 400RMS (PRUEBA)"}]);
   },
   ajustes(){
-    $("#aDes").onchange = e => { S.prefs.despachador = e.target.value.trim(); savePrefs(); };
-    $("#aSer").onchange = e => { S.prefs.pedirSerial = e.target.checked; savePrefs(); };
     $("#aSon").onchange = e => { S.prefs.sonido = e.target.checked; savePrefs(); };
-    $("#aCsv").onclick = exportCSV;
-    $("#aCat").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) importarCatalogo(f); });
-    const cd = $("#aCatDel"); if (cd) armar(cd, "Toca de nuevo para vaciar", () => { S.catalogo = {}; Store.saveCatalogo(); render(); });
-    $("#aJson").onclick = exportJSON;
-    $("#aImp").addEventListener("change", e => { const f = e.target.files[0]; if (f) importJSON(f); });
-    $$("[data-unalias]").forEach(b => b.onclick = () => { delete S.aliases[b.dataset.unalias]; Store.saveAliases(); render(); });
-    armar($("#aWipe"), "Toca de nuevo: se borra todo", () => {
-      lsSet("despachos", {}); lsSet("devoluciones", []); Store.load(); S.cur = null; S.dev = null;
-      S.msg = {kind: "ok", text: "Se borraron todos los despachos y devoluciones. Los códigos asociados se conservan."}; render();
-    });
+    $("#aTrans").onchange = e => { S.prefs.transicion = e.target.checked; savePrefs(); };
+    $("#aEtq").onchange = e => { S.prefs.etiqueta = e.target.value; savePrefs(); };
+    const bi = $("#bInstalar"); if (bi) bi.onclick = async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch(e){} installEvt = null; render(); };
+    $("#aRecargar").onclick = async () => { S.msg = {kind: "busy", text: "Recargando…"}; render(); try { await cargarCatalogo(); S.msg = {kind: "ok", text: `Catálogo actualizado: ${Object.keys(S.prod).length} productos.`}; } catch(e){ S.msg = {kind: "bad", text: errMsg(e)}; } render(); };
+    $("#aSalir").onclick = async () => { await sb.auth.signOut(); S.perfil = null; S.user = null; S.cur = null; S.ing = null; S.dev = null; S.msg = null; go("login"); };
+    cargarUsuarios();
   }
 };
-
-/* ================= barra de estado ================= */
-function setStatus(kind, text, sub, acts){
-  const el = $("#status");
-  el.className = "status " + (kind || "");
-  el.innerHTML = esc(text) + (sub ? `<span class="sub">${esc(sub)}</span>` : "") + (acts ? `<div class="acts">${acts}</div>` : "");
-  const cm = $("#camMsg"); if (cm){ cm.className = "cam-msg " + (kind || ""); cm.textContent = text + (sub && kind === "bad" ? ". " + sub : ""); }
-  el.querySelectorAll("[data-act]").forEach(b => b.onclick = () => ACT[b.dataset.act]());
-}
-const serialActs = conSinSerial => (conSinSerial ? `<button class="btn sm" data-act="sinserial">Unidad sin serial</button>` : "") + `<button class="btn sm" data-act="cancelarserial">Cancelar</button>`;
-const listaActual = () => S.mode === "devolucion" ? S.dev.items : S.cur.items;
-
-/* ================= lógica del despacho ================= */
-function empezar(d, nuevo){
-  d.pila = d.pila || [];
-  d.items.forEach(i => { i.seriales = i.seriales || []; });
-  S.cur = d; S.esperaSerial = null; S.ultimo = null; S.draft = null;
-  if (nuevo) Store.saveDesp(d);
-  go("despacho");
-  const pend = totalUnits(d) - doneUnits(d);
-  setStatus("", pend ? "Escanea el primer producto." : "Todo verificado. Cierra el despacho.", nuevo ? "" : `Retomando: faltan ${pend} unidades.`);
-}
-
-function buscarEn(items, code){
-  let i = items.findIndex(it => canon(it.codigo) === canon(code));
-  if (i < 0 && S.aliases[code]) i = items.findIndex(it => canon(it.codigo) === canon(S.aliases[code]));
-  return i;
-}
-const esCodigoProducto = code => listaActual().some(it => canon(it.codigo) === canon(code)) || !!S.aliases[code];
-
-function onScan(raw){
-  const code = norm(raw);
-  if (!code) return;
-  if (S.mode === "despacho" && S.cur) return scanDespacho(code);
-  if (S.mode === "devolucion" && S.dev) return scanDevolucion(code);
-}
-
-function scanDespacho(code){
-  const d = S.cur;
-  if (S.esperaSerial !== null){
-    const it = d.items[S.esperaSerial];
-    if (esCodigoProducto(code)){ beep("bad"); return setStatus("bad", "Eso es un código de producto, no un serial", `Escanea el serial de la unidad de ${it.codigo}.`, serialActs(true)); }
-    if (d.items.some(x => x.seriales.includes(code))){ beep("bad"); return setStatus("bad", `El serial ${code} ya se escaneó en esta factura`, "Cada unidad tiene un serial distinto. Revisa la caja.", serialActs(true)); }
-    const otra = serialFuera(code, d.numero);
-    if (otra){ beep("bad"); return setStatus("bad", `El serial ${code} ya salió con la factura ${otra}`, "Esta unidad no está en el depósito. Aparta la caja y revisa.", serialActs(true)); }
-    return sumar(S.esperaSerial, code);
-  }
-  const i = buscarEn(d.items, code);
-  if (i < 0){
-    beep("bad"); S.pendienteAlias = code;
-    return setStatus("bad", `${code} no está en esta factura`, "No entregues este producto. Si es el código de barras de la caja, asócialo al producto correcto.",
-      `<button class="btn sm" data-act="asociar">Asociar a un producto</button><button class="btn sm" data-act="limpiar">Ignorar</button>`);
-  }
-  const it = d.items[i];
-  if (it.hechos >= it.cantidad){ beep("bad"); return setStatus("bad", `Sobra: ya salieron las ${it.cantidad} unidades de ${it.codigo}`, "Devuelve esta unidad al depósito."); }
-  if (d.pedirSerial){ S.esperaSerial = i; beep("warn"); return setStatus("warn", `Ahora escanea el serial de ${it.codigo}`, `Unidad ${it.hechos + 1} de ${it.cantidad}.`, serialActs(true)); }
-  sumar(i, null);
-}
-
-function sumar(i, serial){
-  const d = S.cur, it = d.items[i];
-  it.hechos++; it.seriales.push(serial || "");
-  d.pila.push(i);
-  S.esperaSerial = null; S.ultimo = i;
-  Store.saveDesp(d); beep("ok"); render(); S.ultimo = null;
-  const tot = totalUnits(d), hech = doneUnits(d);
-  if (hech === tot) setStatus("ok", "Todo verificado. Cierra el despacho.", `${tot} de ${tot} unidades.`);
-  else setStatus("ok", `${it.codigo}: ${it.hechos} de ${it.cantidad}`, (serial ? `Serial ${serial} registrado. ` : "") + `Faltan ${tot - hech} unidades en total.`);
-}
-
-function deshacer(){
-  const d = S.cur; if (!d.pila.length) return;
-  const i = d.pila.pop(), it = d.items[i];
-  it.hechos = Math.max(0, it.hechos - 1); const s = it.seriales.pop();
-  S.esperaSerial = null; Store.saveDesp(d); render();
-  setStatus("", `Se quitó una unidad de ${it.codigo}`, s ? `Serial ${s} eliminado.` : "");
-}
-
-function cerrar(){
-  const d = S.cur;
-  d.estado = "despachada"; d.fin = now(); d.despachador = d.despachador || S.prefs.despachador;
-  Store.saveDesp(d);
-  S.cerrado = clone(d); S.cur = null; S.esperaSerial = null;
-  beep("ok"); go("listo");
-}
-
-/* ================= lógica de devoluciones ================= */
-function iniciarDevolucion(numero){
-  const d = getDesp(numero); if (!d) return;
-  if (S.dev && S.dev.numeroFactura !== numero && !confirm("Hay otra devolución sin registrar. ¿Descartarla y empezar esta?")) return go("devolucion");
-  const prev = devueltoDe(numero);
-  const items = d.items.filter(it => it.hechos > 0).map(it => {
-    const r = prev[norm(it.codigo)] || {cant: 0, seriales: []};
-    const salidos = (it.seriales || []).filter(Boolean);
-    return {codigo: it.codigo, descripcion: it.descripcion, despachado: it.hechos, previo: r.cant,
-      disponibles: salidos.filter(s => !r.seriales.includes(s)), conSerial: salidos.length > 0, sinSerial: it.hechos - salidos.length,
-      ahora: 0, serialesAhora: []};
+function bindHist(){
+  $$("[data-open]").forEach(b => b.onclick = () => {
+    const d = S.hist.find(x => x.numero === b.dataset.open);
+    if (d && d.estado === "en_proceso" && S.view === "salida") return abrirDespacho(d);
+    abrirDetalle(b.dataset.open);
   });
-  if (!items.some(it => it.despachado - it.previo > 0)){
-    S.msg = {kind: "bad", text: `Todas las unidades de la factura ${numero} ya fueron devueltas.`}; return go("devNueva");
-  }
-  S.dev = {id: "DV-" + Date.now(), vinculada: true, numeroFactura: numero, cliente: d.cliente, motivo: "", nota: "", items, pila: []};
-  S.esperaSerial = null; S.msg = null;
-  go("devolucion");
-  setStatus("", "Escanea el producto o el serial que devuelve el cliente.", "Solo se aceptan unidades que salieron con esta factura.");
+  $$("[data-dev]").forEach(b => b.onclick = () => verDevolucion(b.dataset.dev));
 }
-
-function iniciarDevolucionLibre(numero){
-  S.dev = {id: "DV-" + Date.now(), vinculada: false, numeroFactura: numero || "", cliente: "", motivo: "", nota: "", items: [], pila: []};
-  S.esperaSerial = null; S.msg = null;
-  go("devolucion");
-  setStatus("", "Escanea o escribe cada producto que devuelve el cliente.");
-}
-
-function scanDevolucion(code){
-  const dv = S.dev;
-  if (!dv.vinculada){
-    let i = buscarEn(dv.items, code);
-    const real = S.aliases[code] || code;
-    if (i < 0){ dv.items.push({codigo: real, descripcion: "", ahora: 0, serialesAhora: []}); i = dv.items.length - 1; }
-    return agregarDev(i, null);
-  }
-  if (S.esperaSerial !== null){
-    const it = dv.items[S.esperaSerial];
-    if (it.serialesAhora.includes(code)){ beep("bad"); return setStatus("bad", `El serial ${code} ya está en esta devolución`, "", serialActs(it.sinSerial > 0)); }
-    if (!it.disponibles.includes(code)){
-      beep("bad");
-      return setStatus("bad", `El serial ${code} no salió con la factura ${dv.numeroFactura}`, esCodigoProducto(code) ? "Escaneaste un código de producto; escanea el serial de la caja." : "No recibas esta unidad sin revisar de qué factura viene.", serialActs(it.sinSerial > 0));
-    }
-    return agregarDev(S.esperaSerial, code);
-  }
-  // ¿Escanearon directamente un serial que salió con esta factura?
-  const porSerial = dv.items.findIndex(it => it.disponibles.includes(code) && !it.serialesAhora.includes(code));
-  if (porSerial >= 0){
-    const it = dv.items[porSerial];
-    if (it.ahora >= it.despachado - it.previo){ beep("bad"); return setStatus("bad", `Ya se completaron las unidades de ${it.codigo} que se pueden devolver`, ""); }
-    return agregarDev(porSerial, code);
-  }
-  if (dv.items.some(it => it.serialesAhora.includes(code))){ beep("bad"); return setStatus("bad", `El serial ${code} ya está en esta devolución`, ""); }
-  const i = buscarEn(dv.items, code);
-  if (i < 0){
-    beep("bad"); S.pendienteAlias = code;
-    return setStatus("bad", `${code} no salió con la factura ${dv.numeroFactura}`, "No recibas este producto en esta devolución. Si es el código de barras de la caja, asócialo al producto correcto.",
-      `<button class="btn sm" data-act="asociar">Asociar a un producto</button><button class="btn sm" data-act="limpiar">Ignorar</button>`);
-  }
-  const it = dv.items[i];
-  const max = it.despachado - it.previo;
-  if (it.ahora >= max){ beep("bad"); return setStatus("bad", `No se pueden devolver más unidades de ${it.codigo}`, `Salieron ${it.despachado}${it.previo ? ` y ya se habían devuelto ${it.previo}` : ""}.`); }
-  if (it.conSerial){ S.esperaSerial = i; beep("warn"); return setStatus("warn", `Ahora escanea el serial de ${it.codigo}`, "Debe ser uno de los seriales que salieron con esta factura.", serialActs(sinSerialLibres(it) > 0)); }
-  agregarDev(i, null);
-}
-const sinSerialLibres = it => it.sinSerial - it.serialesAhora.filter(s => !s).length;
-
-function agregarDev(i, serial){
-  const dv = S.dev, it = dv.items[i];
-  it.ahora++; it.serialesAhora.push(serial || "");
-  dv.pila.push(i); S.esperaSerial = null; S.ultimo = i;
-  beep("ok"); render(); S.ultimo = null;
-  const tot = dv.items.reduce((a, x) => a + x.ahora, 0);
-  setStatus("ok", `${it.codigo}: ${it.ahora} ${it.ahora === 1 ? "unidad" : "unidades"} a devolver`, (serial ? `Serial ${serial}. ` : "") + `Total en esta devolución: ${tot}.`);
-}
-
-function deshacerDev(){
-  const dv = S.dev; if (!dv.pila.length) return;
-  const i = dv.pila.pop(), it = dv.items[i];
-  it.ahora = Math.max(0, it.ahora - 1); const s = it.serialesAhora.pop();
-  S.esperaSerial = null; render();
-  setStatus("", `Se quitó una unidad de ${it.codigo}`, s ? `Serial ${s}.` : "");
-}
-
-function registrarDevolucion(){
-  const dv = S.dev;
-  if (!dv.motivo){ beep("bad"); setStatus("bad", "Elige el motivo de la devolución", "Está arriba, antes de la lista de productos."); const m = $("#dvMot"); if (m) m.focus(); return; }
-  const items = dv.items.filter(it => it.ahora > 0).map(it => ({codigo: it.codigo, descripcion: it.descripcion, cantidad: it.ahora, seriales: it.serialesAhora.slice()}));
-  if (!items.length) return;
-  const d = dv.vinculada ? getDesp(dv.numeroFactura) : null;
-  const reg = {id: dv.id, fecha: now(), numeroFactura: dv.numeroFactura, cliente: dv.cliente || (d && d.cliente) || "", vinculada: dv.vinculada,
-    motivo: dv.motivo, nota: dv.nota, despachador: S.prefs.despachador, items};
-  Store.addDev(reg);
-  S.devCerrada = reg; S.dev = null; S.esperaSerial = null;
-  beep("ok"); go("devListo");
+function agregarLineaIngreso(p, cantidad){
+  const g = S.ing;
+  let i = g.items.findIndex(it => canon(it.producto) === canon(p));
+  if (i < 0){ g.items.push({producto: p, codigo_proveedor: "", descripcion: S.prod[p] ? S.prod[p].descripcion : "", cantidad, recibidos: 0, seriales: [], rollos: [], tipo: tipoDe(S.prod[p])}); i = g.items.length - 1; guardarIngreso(); }
+  render(); lineaIngreso(i);
 }
 
 /* ================= acciones de la barra ================= */
 const ACT = {
-  sinserial(){
-    if (S.esperaSerial === null) return;
-    if (S.mode === "devolucion") agregarDev(S.esperaSerial, null); else sumar(S.esperaSerial, null);
+  cancelar(){ S.espera = null; setStatus("", "Escanea el siguiente producto."); },
+  limpiar(){ S.pendienteAlias = null; S.pendSobrante = null; setStatus("", "Escanea el siguiente producto."); },
+  generar(){ if (S.espera && S.mode === "ingreso") generarSerialIngreso(S.espera.i); },
+  deshacer(){ if (S.mode === "ingreso") deshacerIngreso(); },
+  sobrante(){ const p = S.pendSobrante; S.pendSobrante = null; if (p) agregarLineaIngreso(p, 0); },
+  async regdesp(){
+    const x = S.pendSerial; if (!x || !S.cur) return;
+    const it = S.cur.datos.items[x.i];
+    S.busy = true; setStatus("", "Registrando en el inventario…");
+    try {
+      await DB.rpc("registrar_unidad", {p_serial: x.serial, p_producto: it.codigo, p_origen: "fabricante", p_ingreso: null, p_metros: null, p_documento: "Inventario inicial"});
+      S.busy = false; S.pendSerial = null;
+      await despacharSerial(x.i, x.serial, {serial: x.serial, producto: it.codigo, estado: "deposito"});
+    } catch(e){ S.busy = false; bad("No se pudo registrar", errMsg(e)); }
   },
-  cancelarserial(){ S.esperaSerial = null; setStatus("", "Escanea el siguiente producto."); },
-  limpiar(){ S.pendienteAlias = null; setStatus("", "Escanea el siguiente producto."); },
   asociar(){
-    const code = S.pendienteAlias, items = listaActual();
+    const code = S.pendienteAlias; if (!code) return;
     closeCam();
-    const cand = items.map((it, i) => ({it, i})).filter(x => S.mode === "devolucion" ? x.it.ahora < x.it.despachado - x.it.previo : x.it.hechos < x.it.cantidad);
-    $("#sheet").innerHTML = `<h2 style="margin-top:0">¿Qué producto es ${esc(code)}?</h2>
-      <p class="muted small">Desde ahora, este código se contará como el producto que elijas, en todas las facturas.</p>
-      ${cand.map(x => `<button class="pick" data-pick="${x.i}"><span class="code" style="font-size:18px">${esc(x.it.codigo)}</span><div class="small muted">${esc(x.it.descripcion)}</div></button>`).join("")}
-      <button class="btn" style="margin-top:12px" data-pick="-1">Cancelar</button>`;
-    $("#modal").hidden = false;
-    $$("#sheet [data-pick]").forEach(b => b.onclick = () => {
-      $("#modal").hidden = true;
-      const i = +b.dataset.pick; if (i < 0) return ACT.limpiar();
-      S.aliases[code] = items[i].codigo; Store.saveAliases();
-      S.pendienteAlias = null; onScan(code);
+    const items = S.mode === "ingreso" ? S.ing.items.map(x => ({codigo: x.producto, descripcion: x.descripcion})) : S.mode === "despacho" ? S.cur.datos.items : [];
+    sheet(`<h2 style="margin-top:0">¿Qué producto es ${esc(code)}?</h2>
+      <p class="muted small">Desde ahora, este código de barras se reconocerá como el producto que elijas, en todos los teléfonos.</p>
+      ${items.map((x, i) => `<button class="pick" data-pick="${i}"><span class="code" style="font-size:18px">${esc(x.codigo)}</span><div class="small muted">${esc(x.descripcion)}</div></button>`).join("")}
+      <button class="btn" style="margin-top:12px" data-pick="-1">Cancelar</button>`, sh => {
+      sh.querySelectorAll("[data-pick]").forEach(b => b.onclick = async () => {
+        cerrarSheet();
+        const i = +b.dataset.pick; if (i < 0) return ACT.limpiar();
+        try { await asociarCodigo(code, items[i].codigo); S.pendienteAlias = null; onScan(code); }
+        catch(e){ bad("No se pudo asociar", errMsg(e)); }
+      });
     });
   }
 };
-$("#modal").addEventListener("click", e => { if (e.target.id === "modal") $("#modal").hidden = true; });
 
-/* ================= entradas: cámara, teclado, lector bluetooth, foto ================= */
+/* ================= entradas: cámara, teclado, lector, foto ================= */
+function onScan(raw){
+  const code = norm(raw);
+  if (!code || S.busy || !$("#modal").hidden) return;
+  if (S.mode === "despacho" && S.cur) return scanDespacho(code);
+  if (S.mode === "ingreso" && S.ing) return scanIngreso(code);
+  if (S.mode === "devolucion" && S.dev) return scanDevolucion(code);
+  if (S.mode === "buscar"){ closeCam(); return buscarInventario(code); }
+}
 const scanIn = $("#scanIn");
 const enviarManual = () => { const v = scanIn.value; scanIn.value = ""; onScan(v); };
 scanIn.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); enviarManual(); } });
@@ -1175,8 +1845,9 @@ $("#scanGo").onclick = enviarManual;
 
 let qr = null, camOn = false, lastHit = {code: "", t: 0};
 async function openCam(){
-  if (!window.Html5Qrcode) return setStatus("bad", "El lector de cámara no cargó", "Revisa la conexión a internet y recarga la página.");
-  if (!window.isSecureContext) return setStatus("bad", "La cámara necesita una dirección https", "Abre la app desde el enlace https donde la publicaste.");
+  try { await loadScript("https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"); }
+  catch(e){ return setStatus("bad", "El lector de cámara no cargó", "Revisa la conexión a internet."); }
+  if (!window.isSecureContext) return setStatus("bad", "La cámara necesita una dirección https");
   $("#cam").hidden = false;
   $("#camMsg").className = "cam-msg"; $("#camMsg").textContent = "Apunta al código de barras o QR";
   try {
@@ -1185,15 +1856,21 @@ async function openCam(){
       {fps: 12, qrbox: (w, h) => ({width: Math.floor(w * 0.85), height: Math.floor(Math.min(h, w) * 0.45)})},
       text => {
         const t = Date.now(), c = norm(text);
+        if (S.busy || !$("#modal").hidden) return;
         if (t - lastHit.t < 1300 || (c === lastHit.code && t - lastHit.t < 3000)) return;
-        lastHit = {code: c, t}; onScan(c);
+        lastHit = {code: c, t};
+        if (S.mode === "despacho" || S.mode === "ingreso" || S.mode === "devolucion"){
+          // si la acción abrirá un cuadro para escribir metros, se cierra la cámara
+          const esRollo = (S.espera && S.espera.tipo === "rollo") || (S.mode === "ingreso" && (() => { const p = productoDe(c); return p && tipoDe(S.prod[p]) === "metro"; })());
+          if (esRollo) closeCam();
+        }
+        onScan(c);
       }, () => {});
     camOn = true;
   } catch(e){
     $("#cam").hidden = true;
     const denied = e && /NotAllowed|Permission/i.test(String(e.name || e));
-    setStatus("bad", denied ? "No se dio permiso para usar la cámara" : "No se pudo abrir la cámara",
-      denied ? "Permite la cámara en los ajustes del navegador para este sitio y vuelve a intentar." : "Usa el botón de foto o escribe el código.");
+    setStatus("bad", denied ? "No se dio permiso para usar la cámara" : "No se pudo abrir la cámara", denied ? "Permite la cámara en los ajustes del navegador." : "Usa el botón de foto o escribe el código.");
   }
 }
 async function closeCam(){
@@ -1202,26 +1879,24 @@ async function closeCam(){
 }
 $("#camBtn").onclick = openCam;
 $("#camClose").onclick = closeCam;
-
 $("#photoCode").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
-  if (!window.Html5Qrcode) return setStatus("bad", "El lector de códigos no cargó", "Escribe el código.");
+  try { await loadScript("https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"); } catch(err){ return setStatus("bad", "El lector de códigos no cargó"); }
   setStatus("", "Leyendo el código de la foto…");
   try {
     const r = new Html5Qrcode("reader-file", {verbose: false});
     const text = await r.scanFile(f, false);
     try { r.clear(); } catch(_){}
     onScan(text);
-  } catch(err){ beep("bad"); setStatus("bad", "No se encontró un código en la foto", "Acércate más, con buena luz y el código completo en la imagen."); }
+  } catch(err){ bad("No se encontró un código en la foto", "Acércate más, con buena luz y el código completo."); }
 });
+// al abrirse un cuadro de metros durante la cámara, se cierra para poder escribir
+new MutationObserver(() => { if (!$("#modal").hidden) closeCam(); }).observe($("#modal"), {attributes: true, attributeFilter: ["hidden"]});
 
-window.addEventListener("beforeunload", e => { if (S.dev && S.dev.pila.length){ e.preventDefault(); e.returnValue = ""; } });
-
-/* ================= recibir la factura compartida desde WhatsApp ================= */
-window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if (S.view === "inicio") render(); });
-window.addEventListener("appinstalled", () => { installEvt = null; if (S.view === "inicio") render(); });
+/* ================= WhatsApp y app instalada ================= */
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if (S.view === "ajustes") render(); });
+window.addEventListener("appinstalled", () => { installEvt = null; });
 if ("serviceWorker" in navigator && window.isSecureContext && location.protocol !== "file:") navigator.serviceWorker.register("./sw.js").catch(e => console.warn("sw", e));
-
 async function recibirCompartido(){
   const params = new URLSearchParams(location.search);
   if (!params.has("compartido")) return;
@@ -1230,21 +1905,35 @@ async function recibirCompartido(){
     const cache = await caches.open("compartido");
     const key = new URL("factura-compartida", location.href).href;
     const res = await cache.match(key);
-    if (!res){ S.msg = {kind: "bad", text: "No llegó el archivo compartido. Vuelve a compartirlo desde WhatsApp."}; return render(); }
+    if (!res) return;
     const blob = await res.blob();
     const nombre = decodeURIComponent(res.headers.get("X-Nombre") || "factura");
     await cache.delete(key);
     const file = new File([blob], nombre, {type: blob.type});
-    if (/pdf/i.test(file.type) || /\.pdf$/i.test(nombre)) return cargarPDF(file);
-    if (/^image\//i.test(file.type)) return cargarFoto(file);
-    S.msg = {kind: "bad", text: `El archivo "${nombre}" no es un PDF ni una foto. Comparte el PDF de la factura.`}; render();
-  } catch(e){ S.msg = {kind: "bad", text: "No se pudo abrir el archivo compartido. Usa Abrir PDF de la factura."}; render(); }
+    sheet(`<h2 style="margin-top:0">Llegó un archivo</h2><p class="muted small">${esc(nombre)}</p>
+      <button class="btn primary" id="shVenta">Es una factura de venta (salida)</button>
+      <button class="btn" id="shCompra" style="margin-top:10px">Es una factura de compra (ingreso)</button>
+      <button class="btn" id="shNo" style="margin-top:10px">Cancelar</button>`, () => {
+      $("#shNo").onclick = cerrarSheet;
+      $("#shVenta").onclick = async () => { cerrarSheet(); go("salida"); try { abrirRevision(await leerArchivo(file)); } catch(e){ S.msg = {kind: "bad", text: e.message}; render(); } };
+      $("#shCompra").onclick = () => { cerrarSheet(); S.pendFile = {file, para: "ingreso"}; go("ingreso"); cargarIngresos(); };
+    });
+  } catch(e){ console.warn(e); }
 }
+window.addEventListener("beforeunload", e => { if (S.dev && S.dev.pila.length){ e.preventDefault(); e.returnValue = ""; } });
 
-Store.load();
-render();
-recibirCompartido();
+/* ================= arranque ================= */
+async function iniciar(){
+  render();
+  try { await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"); }
+  catch(e){ S.msg = {kind: "bad", text: "No se pudo conectar. Revisa internet y recarga la página."}; return render(); }
+  sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, {auth: {persistSession: true, autoRefreshToken: true}});
+  window.__sb = sb;
+  const {data} = await sb.auth.getSession();
+  if (data && data.session) arrancar(data.session.user);
+  else render();
+}
+iniciar();
 })();
 </script>
-</body>
-</html>
+</body></html>

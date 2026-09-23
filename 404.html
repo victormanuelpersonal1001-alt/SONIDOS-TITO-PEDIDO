@@ -1,3 +1,8 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Despacho</title>
-<script>location.replace(location.origin + "/");</script></head>
-<body style="font-family:sans-serif;padding:24px">Abriendo la app… Si no se abre, <a href="/">toca aquí</a>.</body></html>
+<script>
+  // Vuelve a la página principal de la app (funciona en GitHub Pages dentro de /nombre-del-repositorio/)
+  var partes = location.pathname.split("/");
+  var base = (location.hostname.endsWith("github.io") && partes[1]) ? "/" + partes[1] + "/" : "/";
+  location.replace(location.origin + base);
+</script></head>
+<body style="font-family:sans-serif;padding:24px">Abriendo la app… Si no se abre, <a href="./">toca aquí</a>.</body></html>
